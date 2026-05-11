@@ -1,0 +1,378 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Caronascar API",
+    "version": "1.0.0",
+    "description": "# LAMD API\n\nA **LAMD API** é um serviço de backend RESTful que alimenta uma plataforma de caronas compartilhadas. Ela oferece operações completas de CRUD (Criar, Ler, Atualizar, Deletar) para três recursos principais:\n\n## Recursos\n\n### 👤 Usuários\n\nGerencie os usuários da plataforma, incluindo passageiros e motoristas. Cada usuário possui nome, e-mail, telefone, função (role), informações opcionais sobre veículo e uma avaliação (rating).\n\n### 🚗 Viagens\n\nGerencie as viagens oferecidas pelos motoristas. Uma viagem inclui origem, destino, horário de partida, disponibilidade de assentos, preço por assento e status atual (ex.: `open`). Motoristas podem criar, atualizar e excluir suas viagens.\n\n### 🪑 Solicitações de Assento\n\nGerencie as solicitações de reserva feitas por passageiros para viagens disponíveis. Uma solicitação vincula um passageiro a uma viagem, especificando a quantidade de assentos desejada e um status (ex.: `pending`, `accepted`, `rejected`).\n\n## URL Base\n\nTodas as requisições utilizam a variável `{{baseUrl}}`. Certifique-se de configurá-la no seu ambiente ativo antes de enviar as requisições."
+  },
+  "servers": [
+    {
+      "url": "{{baseUrl}}"
+    }
+  ],
+  "paths": {
+    "/seat-requests": {
+      "post": {
+        "summary": "Create Seat Request",
+        "responses": {},
+        "tags": [
+          "Seat Requests"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tripId": {
+                    "type": "string"
+                  },
+                  "passengerId": {
+                    "type": "string"
+                  },
+                  "seats": {
+                    "type": "integer"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "tripId": "00000000-0000-0000-0000-000000000000",
+                "passengerId": "00000000-0000-0000-0000-000000000000",
+                "seats": 1,
+                "message": "Please accept my request!",
+                "status": "pending"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get All Seat Requests",
+        "responses": {},
+        "tags": [
+          "Seat Requests"
+        ]
+      }
+    },
+    "/seat-requests/{id}": {
+      "get": {
+        "summary": "Get Seat Request by ID",
+        "responses": {},
+        "tags": [
+          "Seat Requests"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "00000000-0000-0000-0000-000000000000"
+        }
+      ],
+      "put": {
+        "summary": "Update Seat Request",
+        "responses": {},
+        "tags": [
+          "Seat Requests"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string"
+                  },
+                  "seats": {
+                    "type": "integer"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "status": "accepted",
+                "seats": 2,
+                "message": "Updated message"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Seat Request",
+        "responses": {},
+        "tags": [
+          "Seat Requests"
+        ]
+      }
+    },
+    "/trips": {
+      "post": {
+        "summary": "Create Trip",
+        "responses": {},
+        "tags": [
+          "Trips"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "driverId": {
+                    "type": "string"
+                  },
+                  "origin": {
+                    "type": "string"
+                  },
+                  "destination": {
+                    "type": "string"
+                  },
+                  "departureAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "totalSeats": {
+                    "type": "integer"
+                  },
+                  "availableSeats": {
+                    "type": "integer"
+                  },
+                  "pricePerSeat": {
+                    "type": "string",
+                    "format": "utc-millisec"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "driverId": "00000000-0000-0000-0000-000000000000",
+                "origin": "São Paulo, SP",
+                "destination": "Campinas, SP",
+                "departureAt": "2026-06-01T08:00:00.000Z",
+                "totalSeats": 4,
+                "availableSeats": 4,
+                "pricePerSeat": "25.00",
+                "notes": "AC on, no smoking",
+                "status": "open"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get All Trips",
+        "responses": {},
+        "tags": [
+          "Trips"
+        ]
+      }
+    },
+    "/trips/{id}": {
+      "get": {
+        "summary": "Get Trip by ID",
+        "responses": {},
+        "tags": [
+          "Trips"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "00000000-0000-0000-0000-000000000000"
+        }
+      ],
+      "put": {
+        "summary": "Update Trip",
+        "responses": {},
+        "tags": [
+          "Trips"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "availableSeats": {
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "availableSeats": 3,
+                "status": "full",
+                "notes": "Updated notes"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Trip",
+        "responses": {},
+        "tags": [
+          "Trips"
+        ]
+      }
+    },
+    "/users": {
+      "post": {
+        "summary": "Create User",
+        "responses": {},
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "format": "utc-millisec"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "vehicle": {
+                    "nullable": true
+                  },
+                  "rating": {
+                    "type": "string",
+                    "format": "utc-millisec"
+                  }
+                }
+              },
+              "example": {
+                "name": "John Doe",
+                "email": "john@example.com",
+                "phone": "11999999999",
+                "role": "passenger",
+                "vehicle": null,
+                "rating": "5.0"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get All Users",
+        "responses": {},
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "summary": "Get User by ID",
+        "responses": {},
+        "tags": [
+          "Users"
+        ]
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "00000000-0000-0000-0000-000000000000"
+        }
+      ],
+      "put": {
+        "summary": "Update User",
+        "responses": {},
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "format": "utc-millisec"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "vehicle": {
+                    "type": "string"
+                  },
+                  "rating": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "name": "John Updated",
+                "email": "john@example.com",
+                "phone": "11988888888",
+                "role": "driver",
+                "vehicle": "Toyota Corolla",
+                "rating": "4.8"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete User",
+        "responses": {},
+        "tags": [
+          "Users"
+        ]
+      }
+    }
+  }
+}
