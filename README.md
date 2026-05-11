@@ -49,15 +49,75 @@ Acesse:
 
 ### Fluxo de teste sugerido
 
-A ordem importa por causa das chaves estrangeiras (uma viagem precisa de um motorista; uma solicitação precisa de uma viagem e de um passageiro):
+A ordem importa por causa das chaves estrangeiras (uma viagem precisa de um motorista; uma solicitação precisa de uma viagem e de um passageiro). Faça tudo pela interface do Swagger UI em http://localhost:3000/docs — para cada rota, clique em **"Try it out"**, edite o corpo da requisição e clique em **"Execute"**.
 
-1. **POST `/users`** — crie um motorista (`role: "driver"`). Copie o `id` retornado.
-2. **POST `/users`** — crie um passageiro (`role: "passenger"`). Copie o `id` retornado.
-3. **POST `/trips`** — publique uma viagem usando o `id` do motorista no campo `driverId`.
-4. **POST `/seat-requests`** — solicite uma vaga usando `tripId` (da viagem) e `passengerId` (do passageiro).
-5. Liste / atualize / remova os recursos via **GET / PUT / DELETE**.
+#### 1. Criar o **motorista** — `POST /users`
 
-> ⚠️ Os exemplos no Swagger usam `maria@example.com` etc. O e-mail é único — ao testar mais de uma vez, troque o e-mail ou apague o usuário anterior. A API retorna **409 Conflict** quando o e-mail já existe.
+Cole no corpo da requisição:
+
+```json
+{
+  "name": "João Motorista",
+  "email": "joao.motorista@example.com",
+  "phone": "31999990001",
+  "role": "driver",
+  "vehicle": "Toyota Corolla 2020 — placa ABC1D23"
+}
+```
+
+Na resposta (status **201**), copie o valor do campo `id`. Esse é o **`driverId`**.
+
+#### 2. Criar o **passageiro** — `POST /users`
+
+Cole no corpo da requisição:
+
+```json
+{
+  "name": "Ana Passageira",
+  "email": "ana.passageira@example.com",
+  "phone": "31999990002",
+  "role": "passenger"
+}
+```
+
+Na resposta (status **201**), copie o valor do campo `id`. Esse é o **`passengerId`**.
+
+> ⚠️ O campo `email` é único. Se você rodar esta mesma requisição duas vezes, a API retorna **409 Conflict**. Basta trocar o e-mail (ex.: `ana2@example.com`) ou apagar o usuário anterior via `DELETE /users/{id}`.
+
+#### 3. Publicar uma **viagem** — `POST /trips`
+
+Cole `driverId` (do passo 1) no JSON abaixo:
+
+```json
+{
+  "driverId": "COLE_AQUI_O_ID_DO_MOTORISTA",
+  "origin": "Belo Horizonte, MG",
+  "destination": "Ouro Preto, MG",
+  "departureAt": "2026-06-01T08:00:00.000Z",
+  "totalSeats": 4,
+  "pricePerSeat": "25.00",
+  "notes": "Saída do bairro Funcionários, sem fumantes"
+}
+```
+
+Copie o `id` da viagem retornada — esse é o **`tripId`**.
+
+#### 4. Solicitar uma **vaga** — `POST /seat-requests`
+
+Cole `tripId` (passo 3) e `passengerId` (passo 2):
+
+```json
+{
+  "tripId": "COLE_AQUI_O_ID_DA_VIAGEM",
+  "passengerId": "COLE_AQUI_O_ID_DO_PASSAGEIRO",
+  "seats": 1,
+  "message": "Posso embarcar no centro?"
+}
+```
+
+#### 5. Explorar o resto
+
+Use os endpoints **GET / PUT / DELETE** de cada recurso para listar, atualizar status (ex.: `PUT /seat-requests/{id}` com `{"status": "accepted"}`) ou remover.
 
 ---
 
