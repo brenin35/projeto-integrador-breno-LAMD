@@ -17,3 +17,6 @@ export const seatRequests = pgTable('seat_requests', {
 }, (t) => [
     unique('unique_active_request').on(t.tripId, t.passengerId)
 ]);
+
+export type SeatRequest = typeof seatRequests.$inferSelect;
+export type InsertSeatRequest = typeof seatRequests.$inferInsert;
