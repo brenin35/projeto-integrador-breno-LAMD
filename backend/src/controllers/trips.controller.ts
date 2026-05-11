@@ -1,19 +1,76 @@
 import { Router } from "express";
+import { z } from "zod";
+import { tripsService } from "../services/trips.js";
 
 export const router = Router();
 
-router.post('/', async (req, res) => {
+const tripSchema = z.object({
+    driverId: z.uuid(),
+    origin: z.string().max(300),
+    destination: z.string().max(300),
+    departureAt: z.iso.datetime().transform(str => new Date(str)),
+    totalSeats: z.number().int().min(1).max(8),
+    availableSeats: z.number().int().min(0),
+    pricePerSeat: z.string(),
+    notes: z.string().optional(),
+    status: z.enum(['open', 'full', 'started', 'completed', 'cancelled']).optional()
 });
 
-router.get('/', async (req, res) => {
-    res.json([]);
+router.post('/', async (req, res, next) => {
+    try {
+        const body = tripSchema.parse(req.body);
+        const result = await tripsService.create(body);
+        res.status(201).json(result);
+    } catch (e: any) {
+        if (e.errors) {
+            res.status(400).json(e.errors);
+        } else {
+            next(e);
+        }
+    }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/', async (req, res, next) => {
+    try {
+        const result = await tripsService.findAll();
+        res.json(result);
+    } catch (e) {
+        next(e);
+    }
 });
 
-router.put('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
+    try {
+        const result = await tripsService.findById(req.params.id);
+        if (!result) {
+            res.status(404).json({ error: 'Trip not found' });
+            return;
+        }
+        res.json(result);
+    } catch (e) {
+        next(e);
+    }
 });
 
-router.delete('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
+    try {
+        const body = tripSchema.partial().parse(req.body);
+        const result = await tripsService.update(req.params.id, body as any);
+        res.json(result);
+    } catch (e: any) {
+        if (e.errors) {
+            res.status(400).json(e.errors);
+        } else {
+            next(e);
+        }
+    }
+});
+
+router.delete('/:id', async (req, res, next) => {
+    try {
+        await tripsService.delete(req.params.id);
+        res.status(204).end();
+    } catch (e) {
+        next(e);
+    }
 });
