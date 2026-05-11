@@ -1,0 +1,18 @@
+$kind: http-request
+name: Create Seat Request
+method: POST
+url: '{{baseUrl}}/seat-requests'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "tripId": "00000000-0000-0000-0000-000000000000",
+      "passengerId": "00000000-0000-0000-0000-000000000000",
+      "seats": 1,
+      "message": "Please accept my request!",
+      "status": "pending"
+    }

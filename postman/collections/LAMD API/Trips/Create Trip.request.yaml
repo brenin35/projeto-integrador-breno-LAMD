@@ -1,0 +1,22 @@
+$kind: http-request
+name: Create Trip
+method: POST
+url: '{{baseUrl}}/trips'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "driverId": "00000000-0000-0000-0000-000000000000",
+      "origin": "São Paulo, SP",
+      "destination": "Campinas, SP",
+      "departureAt": "2026-06-01T08:00:00.000Z",
+      "totalSeats": 4,
+      "availableSeats": 4,
+      "pricePerSeat": "25.00",
+      "notes": "AC on, no smoking",
+      "status": "open"
+    }

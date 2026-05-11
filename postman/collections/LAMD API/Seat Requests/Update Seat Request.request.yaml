@@ -1,0 +1,19 @@
+$kind: http-request
+name: Update Seat Request
+method: PUT
+url: '{{baseUrl}}/seat-requests/:id'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+pathVariables:
+  - key: id
+    value: '00000000-0000-0000-0000-000000000000'
+body:
+  type: json
+  content: |-
+    {
+      "status": "accepted",
+      "seats": 2,
+      "message": "Updated message"
+    }

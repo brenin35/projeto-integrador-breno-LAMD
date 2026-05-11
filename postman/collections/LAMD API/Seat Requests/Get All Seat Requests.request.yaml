@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get All Seat Requests
+method: GET
+url: '{{baseUrl}}/seat-requests'
+order: 2000
