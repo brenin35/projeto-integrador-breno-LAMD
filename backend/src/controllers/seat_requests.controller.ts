@@ -28,6 +28,10 @@ router.post('/', async (req, res, next) => {
     } catch (e: any) {
         if (e.errors) {
             res.status(400).json(e.errors);
+        } else if (e.code === '23503') {
+            res.status(400).json({ error: 'tripId ou passengerId não corresponde a um registro existente' });
+        } else if (e.code === '23505') {
+            res.status(409).json({ error: 'Este passageiro já tem uma solicitação para essa viagem' });
         } else {
             next(e);
         }

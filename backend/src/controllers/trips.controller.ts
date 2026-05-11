@@ -32,6 +32,8 @@ router.post('/', async (req, res, next) => {
     } catch (e: any) {
         if (e.errors) {
             res.status(400).json(e.errors);
+        } else if (e.code === '23503') {
+            res.status(400).json({ error: 'driverId não corresponde a nenhum usuário existente' });
         } else {
             next(e);
         }
