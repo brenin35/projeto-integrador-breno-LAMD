@@ -20,6 +20,8 @@ router.post('/', async (req, res, next) => {
     } catch (e: any) {
         if (e.errors) {
             res.status(400).json(e.errors);
+        } else if (e.code === '23505') {
+            res.status(409).json({ error: 'E-mail já cadastrado' });
         } else {
             next(e);
         }
@@ -56,6 +58,8 @@ router.put('/:id', async (req, res, next) => {
     } catch (e: any) {
         if (e.errors) {
             res.status(400).json(e.errors);
+        } else if (e.code === '23505') {
+            res.status(409).json({ error: 'E-mail já cadastrado' });
         } else {
             next(e);
         }
