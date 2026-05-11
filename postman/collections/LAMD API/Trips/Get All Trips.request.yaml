@@ -1,5 +1,0 @@
-$kind: http-request
-name: Get All Trips
-method: GET
-url: '{{baseUrl}}/trips'
-order: 2000

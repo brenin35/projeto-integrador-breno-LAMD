@@ -4,22 +4,30 @@ import { tripsService } from "../services/trips.js";
 
 export const router = Router();
 
-const tripSchema = z.object({
+const createTripSchema = z.object({
     driverId: z.uuid(),
     origin: z.string().max(300),
     destination: z.string().max(300),
     departureAt: z.iso.datetime().transform(str => new Date(str)),
     totalSeats: z.number().int().min(1).max(8),
-    availableSeats: z.number().int().min(0),
     pricePerSeat: z.string(),
     notes: z.string().optional(),
-    status: z.enum(['open', 'full', 'started', 'completed', 'cancelled']).optional()
+});
+
+const updateTripSchema = z.object({
+    availableSeats: z.number().int().min(0).optional(),
+    status: z.enum(['open', 'full', 'started', 'completed', 'cancelled']).optional(),
+    notes: z.string().optional(),
 });
 
 router.post('/', async (req, res, next) => {
     try {
-        const body = tripSchema.parse(req.body);
-        const result = await tripsService.create(body);
+        const body = createTripSchema.parse(req.body);
+        const result = await tripsService.create({
+            ...body,
+            availableSeats: body.totalSeats,
+            status: 'open',
+        });
         res.status(201).json(result);
     } catch (e: any) {
         if (e.errors) {
@@ -54,7 +62,7 @@ router.get('/:id', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
     try {
-        const body = tripSchema.partial().parse(req.body);
+        const body = updateTripSchema.parse(req.body);
         const result = await tripsService.update(req.params.id, body as any);
         res.json(result);
     } catch (e: any) {

@@ -1,8 +1,0 @@
-$kind: http-request
-name: Get Seat Request by ID
-method: GET
-url: '{{baseUrl}}/seat-requests/:id'
-order: 3000
-pathVariables:
-  - key: id
-    value: '00000000-0000-0000-0000-000000000000'

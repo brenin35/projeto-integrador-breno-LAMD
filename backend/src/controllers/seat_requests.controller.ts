@@ -4,18 +4,26 @@ import { seatRequestsService } from "../services/seat_requests.js";
 
 export const router = Router();
 
-const seatRequestSchema = z.object({
+const createSeatRequestSchema = z.object({
     tripId: z.string().uuid(),
     passengerId: z.string().uuid(),
     seats: z.number().int().min(1).optional(),
     message: z.string().optional(),
-    status: z.enum(['pending', 'accepted', 'rejected', 'cancelled']).optional()
+});
+
+const updateSeatRequestSchema = z.object({
+    status: z.enum(['pending', 'accepted', 'rejected', 'cancelled']).optional(),
+    seats: z.number().int().min(1).optional(),
+    message: z.string().optional(),
 });
 
 router.post('/', async (req, res, next) => {
     try {
-        const body = seatRequestSchema.parse(req.body);
-        const result = await seatRequestsService.create(body);
+        const body = createSeatRequestSchema.parse(req.body);
+        const result = await seatRequestsService.create({
+            ...body,
+            status: 'pending',
+        });
         res.status(201).json(result);
     } catch (e: any) {
         if (e.errors) {
@@ -50,7 +58,7 @@ router.get('/:id', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
     try {
-        const body = seatRequestSchema.partial().parse(req.body);
+        const body = updateSeatRequestSchema.parse(req.body);
         const result = await seatRequestsService.update(req.params.id, body as any);
         res.json(result);
     } catch (e: any) {

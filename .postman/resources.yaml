@@ -1,7 +1,0 @@
-# Use this workspace to collaborate
-workspace:
-  id: 1f4aefbe-a103-4b60-86ef-279d5f360145
-
-localResources:
-  specs:
-    - ../postman/specs/Caronascar API/Caronascar API.json

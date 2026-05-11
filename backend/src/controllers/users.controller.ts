@@ -10,7 +10,6 @@ const userSchema = z.object({
     phone: z.string().max(20).optional(),
     role: z.enum(['passenger', 'driver']),
     vehicle: z.string().max(120).optional(),
-    rating: z.string().optional()
 });
 
 router.post('/', async (req, res, next) => {
