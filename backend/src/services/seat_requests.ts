@@ -1,10 +1,21 @@
 import { eq } from "drizzle-orm";
 import { db } from "../config/index.js";
 import { seatRequests } from "../models/seat_requests.sql.js";
+import { safePublish } from "../messaging/publisher.js";
+import { EVENTS } from "../messaging/events.js";
 
 export const seatRequestsService = {
     async create(data: typeof seatRequests.$inferInsert) {
         const [result] = await db.insert(seatRequests).values(data).returning();
+        if (result) {
+            await safePublish(EVENTS.SEAT_REQUEST_CREATED, {
+                id: result.id,
+                tripId: result.tripId,
+                passengerId: result.passengerId,
+                seats: result.seats,
+                status: result.status,
+            });
+        }
         return result;
     },
 
@@ -18,7 +29,17 @@ export const seatRequestsService = {
     },
 
     async update(id: string, data: Partial<typeof seatRequests.$inferInsert>) {
+        const before = await this.findById(id);
         const [result] = await db.update(seatRequests).set({ ...data, updatedAt: new Date() }).where(eq(seatRequests.id, id)).returning();
+        if (result && before && data.status && before.status !== result.status) {
+            await safePublish(EVENTS.SEAT_REQUEST_STATUS_CHANGED, {
+                id: result.id,
+                tripId: result.tripId,
+                passengerId: result.passengerId,
+                previousStatus: before.status,
+                status: result.status,
+            });
+        }
         return result;
     },
 

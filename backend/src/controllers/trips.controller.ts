@@ -1,11 +1,11 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 import { tripsService } from "../services/trips.js";
+import { authenticate } from "../auth/middleware.js";
 
 export const router = Router();
 
 const createTripSchema = z.object({
-    driverId: z.uuid(),
     origin: z.string().max(300),
     destination: z.string().max(300),
     departureAt: z.iso.datetime().transform(str => new Date(str)),
@@ -20,11 +20,36 @@ const updateTripSchema = z.object({
     notes: z.string().optional(),
 });
 
-router.post('/', async (req, res, next) => {
+async function ensureTripOwner(req: Request, res: Response): Promise<boolean> {
+    const userId = req.user?.sub;
+    if (!userId) {
+        res.status(401).json({ error: 'Não autenticado' });
+        return false;
+    }
+
+    if (!req.params.id || typeof req.params.id !== 'string') {
+        res.status(400).json({ error: 'ID da viagem é obrigatório' });
+        return false;
+    }
+
+    const trip = await tripsService.findById(req.params.id);
+    if (!trip) {
+        res.status(404).json({ error: 'Trip not found' });
+        return false;
+    }
+    if (trip.driverId !== userId) {
+        res.status(403).json({ error: 'Apenas o motorista dono da viagem pode alterá-la' });
+        return false;
+    }
+    return true;
+}
+
+router.post('/', authenticate, async (req, res, next) => {
     try {
         const body = createTripSchema.parse(req.body);
         const result = await tripsService.create({
             ...body,
+            driverId: req.user!.sub,
             availableSeats: body.totalSeats,
             status: 'open',
         });
@@ -32,8 +57,6 @@ router.post('/', async (req, res, next) => {
     } catch (e: any) {
         if (e.errors) {
             res.status(400).json(e.errors);
-        } else if (e.code === '23503') {
-            res.status(400).json({ error: 'driverId não corresponde a nenhum usuário existente' });
         } else {
             next(e);
         }
@@ -62,8 +85,14 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', authenticate, async (req, res, next) => {
     try {
+        if (!(await ensureTripOwner(req, res))) return;
+
+        if (!req.params.id || typeof req.params.id !== 'string') {
+            res.status(400).json({ error: 'ID da viagem é obrigatório' });
+            return;
+        }
         const body = updateTripSchema.parse(req.body);
         const result = await tripsService.update(req.params.id, body as any);
         res.json(result);
@@ -76,8 +105,14 @@ router.put('/:id', async (req, res, next) => {
     }
 });
 
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', authenticate, async (req, res, next) => {
     try {
+        if (!req.params.id || typeof req.params.id !== 'string') {
+            res.status(400).json({ error: 'ID da viagem é obrigatório' });
+            return;
+        }
+        
+        if (!(await ensureTripOwner(req, res))) return;
         await tripsService.delete(req.params.id);
         res.status(204).end();
     } catch (e) {

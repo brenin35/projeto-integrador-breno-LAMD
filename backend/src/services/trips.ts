@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 import { db } from "../config/index.js";
 import { trips } from "../models/trips.sql.js";
+import { safePublish } from "../messaging/publisher.js";
+import { EVENTS } from "../messaging/events.js";
 
 export const tripsService = {
     async create(data: typeof trips.$inferInsert) {
@@ -18,7 +20,16 @@ export const tripsService = {
     },
 
     async update(id: string, data: Partial<typeof trips.$inferInsert>) {
+        const before = await this.findById(id);
         const [result] = await db.update(trips).set({ ...data, updatedAt: new Date() }).where(eq(trips.id, id)).returning();
+        if (result && before && data.status && before.status !== result.status) {
+            await safePublish(EVENTS.TRIP_STATUS_CHANGED, {
+                id: result.id,
+                driverId: result.driverId,
+                previousStatus: before.status,
+                status: result.status,
+            });
+        }
         return result;
     },
 
