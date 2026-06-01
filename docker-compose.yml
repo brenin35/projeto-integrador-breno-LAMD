@@ -1,0 +1,22 @@
+# Painel:  http://localhost:15672   (usuário: guest / senha: guest)
+# AMQP:    amqp://guest:guest@localhost:5672
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: caronascar-rabbitmq
+    ports:
+      - "5672:5672"     # protocolo AMQP (usado pelo backend e pelo worker)
+      - "15672:15672"   # painel web de gerenciamento
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  rabbitmq_data:
