@@ -17,6 +17,11 @@ export const usersService = {
         return result;
     },
 
+    async findByEmail(email: string) {
+        const [result] = await db.select().from(users).where(eq(users.email, email));
+        return result;
+    },
+
     async update(id: string, data: Partial<InsertUser>) {
         const [result] = await db.update(users).set({ ...data, updatedAt: new Date() }).where(eq(users.id, id)).returning();
         return result;
