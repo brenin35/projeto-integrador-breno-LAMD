@@ -2,11 +2,21 @@
 
 **Aluno:** Breno de Oliveira Brandão
 **Disciplina:** Engenharia de Software — Lab. de Desenvolvimento de Aplicações Móveis e Distribuídas
-**Sprint:** 1 — 1º Semestre 2026
+**Sprint:** 2 — 1º Semestre 2026
 
-Marketplace de caronas intermunicipais (modelo BlaBlaCar). API REST em Node.js + Express + PostgreSQL.
+Marketplace de caronas intermunicipais (modelo BlaBlaCar). API REST em Node.js + Express + PostgreSQL,
+com **mensageria assíncrona via RabbitMQ (MOM)** e **autenticação JWT**.
 
 > 📄 Proposta completa do projeto: [Sprint_01-Proposta-LAMD.pdf](Sprint_01-Proposta-LAMD.pdf)
+
+### Sprint 2 — MOM e autenticação
+
+- Arquitetura orientada a eventos com **RabbitMQ** (Topic Exchange `caronascar.events`).
+- O backend (**produtor**) publica eventos; um **worker** independente (consumidor) os processa.
+- 📘 Eventos documentados: [docs/sprint2-eventos.md](docs/sprint2-eventos.md)
+- 📝 Relatório de integração: [docs/sprint2-relatorio.md](docs/sprint2-relatorio.md)
+- 🔐 Autenticação JWT (`/auth/register`, `/auth/login`); um mesmo usuário pode ser motorista
+  (na viagem que publica) e passageiro (na solicitação que faz).
 ---
 
 A API é documentada com **Swagger UI**. Após subir o backend, abra no navegador:
@@ -17,17 +27,30 @@ Lá é possível ver todos os endpoints, schemas, exemplos de payload e testar c
 
 ### Como rodar
 
-Pré-requisitos: Node.js 20+, PostgreSQL 14+.
+Pré-requisitos: Node.js 20+, PostgreSQL 14+, Docker (para o RabbitMQ).
+
+**1. Suba o RabbitMQ (MOM)** — na raiz do projeto:
+
+```bash
+docker compose up -d
+```
+
+Painel de gerenciamento: http://localhost:15672 (usuário `guest`, senha `guest`).
+
+**2. Configure o backend:**
 
 ```bash
 cd backend
 npm install
 ```
 
-Crie um arquivo `backend/.env` com a URL do seu banco PostgreSQL:
+Crie um arquivo `backend/.env` (veja `backend/.env.example`):
 
 ```
 DATABASE_URL=postgresql://USUARIO:SENHA@127.0.0.1/labd
+RABBITMQ_URL=amqp://guest:guest@localhost:5672
+JWT_SECRET=troque-este-segredo
+JWT_EXPIRES_IN=7d
 ```
 
 Crie o banco e rode as migrações:
@@ -36,61 +59,65 @@ Crie o banco e rode as migrações:
 npm run db:migrate
 ```
 
-Suba o servidor:
+**3. Suba a API e o worker** (em dois terminais):
 
 ```bash
-npm run dev
+npm run dev      # terminal 1 — API REST (produtor)
+npm run worker   # terminal 2 — consumidor de eventos do RabbitMQ
 ```
 
 Acesse:
 
 - **http://localhost:3000/docs** — documentação Swagger UI (interativa)
-- **http://localhost:3000/openapi.json** — spec OpenAPI 3.0 em JSON
 
 ### Fluxo de teste sugerido
 
-A ordem importa por causa das chaves estrangeiras (uma viagem precisa de um motorista; uma solicitação precisa de uma viagem e de um passageiro). Faça tudo pela interface do Swagger UI em http://localhost:3000/docs — para cada rota, clique em **"Try it out"**, edite o corpo da requisição e clique em **"Execute"**.
+Agora as rotas de escrita exigem **autenticação**, e o papel é **contextual**: o motorista de
+uma viagem é quem a publica (vem do token, não do corpo); o passageiro de uma solicitação é
+quem a cria. Faça tudo pelo Swagger UI em http://localhost:3000/docs — em cada rota clique em
+**"Try it out"**, edite o corpo e **"Execute"**. Deixe o `npm run worker` rodando para ver as
+notificações chegarem de forma assíncrona.
 
-#### 1. Criar o **motorista** — `POST /users`
-
-Cole no corpo da requisição:
+#### 1. Registrar o **motorista** — `POST /auth/register`
 
 ```json
 {
   "name": "João Motorista",
   "email": "joao.motorista@example.com",
+  "password": "senha123",
   "phone": "31999990001",
-  "role": "driver",
   "vehicle": "Toyota Corolla 2020 — placa ABC1D23"
 }
 ```
 
-Na resposta (status **201**), copie o valor do campo `id`. Esse é o **`driverId`**.
+A resposta (**201**) traz `{ "token": "...", "user": {...} }`. Copie o **token do motorista**.
 
-#### 2. Criar o **passageiro** — `POST /users`
-
-Cole no corpo da requisição:
+#### 2. Registrar o **passageiro** — `POST /auth/register`
 
 ```json
 {
   "name": "Ana Passageira",
   "email": "ana.passageira@example.com",
-  "phone": "31999990002",
-  "role": "passenger"
+  "password": "senha123",
+  "phone": "31999990002"
 }
 ```
 
-Na resposta (status **201**), copie o valor do campo `id`. Esse é o **`passengerId`**.
+Copie o **token do passageiro**. (Para reentrar depois, use `POST /auth/login` com e-mail e senha.)
 
-> ⚠️ O campo `email` é único. Se você rodar esta mesma requisição duas vezes, a API retorna **409 Conflict**. Basta trocar o e-mail (ex.: `ana2@example.com`) ou apagar o usuário anterior via `DELETE /users/{id}`.
+> ⚠️ O `email` é único: repetir o cadastro retorna **409 Conflict**.
 
-#### 3. Publicar uma **viagem** — `POST /trips`
+#### 3. Autenticar no Swagger
 
-Cole `driverId` (do passo 1) no JSON abaixo:
+Clique no botão **"Authorize"** (cadeado, topo da página), cole o **token do motorista** e
+confirme. Todas as próximas requisições irão com `Authorization: Bearer <token>`.
+
+#### 4. Publicar uma **viagem** — `POST /trips` (autenticado como motorista)
+
+O `driverId` **não** vai no corpo — é o usuário do token:
 
 ```json
 {
-  "driverId": "COLE_AQUI_O_ID_DO_MOTORISTA",
   "origin": "Belo Horizonte, MG",
   "destination": "Ouro Preto, MG",
   "departureAt": "2026-06-01T08:00:00.000Z",
@@ -100,37 +127,46 @@ Cole `driverId` (do passo 1) no JSON abaixo:
 }
 ```
 
-Copie o `id` da viagem retornada — esse é o **`tripId`**.
+Copie o `id` da viagem — esse é o **`tripId`**. ➡️ O worker loga nada ainda; aguarde o passo 5.
 
-#### 4. Solicitar uma **vaga** — `POST /seat-requests`
+#### 5. Solicitar uma **vaga** — `POST /seat-requests` (autenticado como passageiro)
 
-Cole `tripId` (passo 3) e `passengerId` (passo 2):
+Volte em **"Authorize"** e troque para o **token do passageiro**. O `passengerId` também vem
+do token:
 
 ```json
 {
   "tripId": "COLE_AQUI_O_ID_DA_VIAGEM",
-  "passengerId": "COLE_AQUI_O_ID_DO_PASSAGEIRO",
   "seats": 1,
   "message": "Posso embarcar no centro?"
 }
 ```
 
-#### 5. Explorar o resto
+➡️ Observe no terminal do **worker**: `🔔 [notificação → motorista] Nova solicitação ...`
+(evento `seat_request.created` consumido de forma assíncrona).
 
-Use os endpoints **GET / PUT / DELETE** de cada recurso para listar, atualizar status (ex.: `PUT /seat-requests/{id}` com `{"status": "accepted"}`) ou remover.
+#### 6. Aceitar a solicitação — `PUT /seat-requests/{id}` (autenticado como motorista)
+
+Troque de volta para o **token do motorista** e envie `{"status": "accepted"}`. ➡️ O worker
+loga `🔔 [notificação → passageiro] ...` (evento `seat_request.status_changed`). Iniciar a
+viagem com `PUT /trips/{id}` `{"status": "started"}` dispara `trip.status_changed`.
 
 ---
 
 ## Estrutura
 
 ```
+docker-compose.yml              # RabbitMQ (MOM) para desenvolvimento
+docs/                           # documentação dos eventos + relatório (Sprint 2)
 backend/
 ├── index.ts                    # entrypoint (Express + Swagger UI)
 ├── src/
 │   ├── openapi.ts              # spec OpenAPI 3.0 (fonte da verdade da doc)
 │   ├── config/                 # conexão com o Postgres (Drizzle)
-│   ├── controllers/            # rotas HTTP + validação Zod
-│   ├── services/               # acesso a dados
-│   └── models/                 # schema Drizzle (users, trips, seat_requests)
+│   ├── controllers/            # rotas HTTP + validação Zod (inclui auth)
+│   ├── services/               # acesso a dados + publicação de eventos
+│   ├── models/                 # schema Drizzle (users, trips, seat_requests)
+│   ├── auth/                   # JWT, hash de senha, middleware de autenticação
+│   └── messaging/              # RabbitMQ: connection, publisher, events, consumer (worker)
 └── drizzle/                    # migrações SQL geradas
 ```
