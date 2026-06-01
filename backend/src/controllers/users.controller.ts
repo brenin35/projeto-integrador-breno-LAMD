@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { usersService } from "../services/users.js";
+import { sanitizeUser } from "../auth/sanitize.js";
 
 export const router = Router();
 
@@ -8,7 +9,6 @@ const userSchema = z.object({
     name: z.string().max(120),
     email: z.email().max(200),
     phone: z.string().max(20).optional(),
-    role: z.enum(['passenger', 'driver']),
     vehicle: z.string().max(120).optional(),
 });
 
@@ -16,7 +16,7 @@ router.post('/', async (req, res, next) => {
     try {
         const body = userSchema.parse(req.body);
         const result = await usersService.create(body);
-        res.status(201).json(result);
+        res.status(201).json(result ? sanitizeUser(result) : result);
     } catch (e: any) {
         if (e.errors) {
             res.status(400).json(e.errors);
@@ -31,7 +31,7 @@ router.post('/', async (req, res, next) => {
 router.get('/', async (req, res, next) => {
     try {
         const result = await usersService.findAll();
-        res.json(result);
+        res.json(result.map(sanitizeUser));
     } catch (e) {
         next(e);
     }
@@ -44,7 +44,7 @@ router.get('/:id', async (req, res, next) => {
             res.status(404).json({ error: 'User not found' });
             return;
         }
-        res.json(result);
+        res.json(sanitizeUser(result));
     } catch (e) {
         next(e);
     }
@@ -54,7 +54,7 @@ router.put('/:id', async (req, res, next) => {
     try {
         const body = userSchema.partial().parse(req.body);
         const result = await usersService.update(req.params.id, body as any);
-        res.json(result);
+        res.json(result ? sanitizeUser(result) : result);
     } catch (e: any) {
         if (e.errors) {
             res.status(400).json(e.errors);
