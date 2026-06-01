@@ -6,6 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch index.ts",
+    "worker": "tsx src/messaging/consumer.ts",
+    "worker:watch": "tsx watch src/messaging/consumer.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
@@ -14,7 +16,6 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/amqplib": "^0.10.8",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.20.0",
