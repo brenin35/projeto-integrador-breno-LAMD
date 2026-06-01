@@ -24,11 +24,20 @@ export const openApiDoc = {
         { url: 'http://localhost:3000', description: 'Desenvolvimento local' },
     ],
     tags: [
-        { name: 'Users', description: 'Cadastro de motoristas e passageiros' },
+        { name: 'Auth', description: 'Registro e login (JWT). Use o token no botão "Authorize".' },
+        { name: 'Users', description: 'Cadastro de usuários' },
         { name: 'Trips', description: 'Viagens publicadas pelos motoristas' },
         { name: 'Seat Requests', description: 'Solicitações de vaga feitas pelos passageiros' },
     ],
     components: {
+        securitySchemes: {
+            bearerAuth: {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'JWT',
+                description: 'Token JWT retornado por POST /auth/login ou /auth/register.',
+            },
+        },
         schemas: {
             UUID: {
                 type: 'string',
@@ -51,6 +60,36 @@ export const openApiDoc = {
                 type: 'object',
                 properties: { error: { type: 'string', example: 'User not found' } },
             },
+            ErrorMessage: {
+                type: 'object',
+                properties: { error: { type: 'string' } },
+            },
+            RegisterBody: {
+                type: 'object',
+                required: ['name', 'email', 'password'],
+                properties: {
+                    name: { type: 'string', maxLength: 120, example: 'Maria Silva' },
+                    email: { type: 'string', format: 'email', maxLength: 200, example: 'maria@example.com' },
+                    password: { type: 'string', minLength: 6, maxLength: 72, example: 'senha123' },
+                    phone: { type: 'string', maxLength: 20, example: '11999999999' },
+                    vehicle: { type: 'string', maxLength: 120, example: 'Toyota Corolla 2020 — placa ABC1D23' },
+                },
+            },
+            LoginBody: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                    email: { type: 'string', format: 'email', example: 'maria@example.com' },
+                    password: { type: 'string', example: 'senha123' },
+                },
+            },
+            AuthResponse: {
+                type: 'object',
+                properties: {
+                    token: { type: 'string', description: 'JWT — use em Authorization: Bearer <token>' },
+                    user: { $ref: '#/components/schemas/User' },
+                },
+            },
             User: {
                 type: 'object',
                 properties: {
@@ -58,7 +97,6 @@ export const openApiDoc = {
                     name: { type: 'string', maxLength: 120, example: 'Maria Silva' },
                     email: { type: 'string', format: 'email', example: 'maria@example.com' },
                     phone: { type: 'string', maxLength: 20, nullable: true, example: '11999999999' },
-                    role: { type: 'string', enum: ['passenger', 'driver'], example: 'driver' },
                     vehicle: { type: 'string', maxLength: 120, nullable: true, example: 'Toyota Corolla 2020 — placa ABC1D23' },
                     rating: { type: 'string', nullable: true, example: '5.00', description: 'Avaliação média (0.00–5.00). Definida pelo sistema.' },
                     createdAt: { type: 'string', format: 'date-time', nullable: true },
@@ -67,12 +105,11 @@ export const openApiDoc = {
             },
             CreateUserBody: {
                 type: 'object',
-                required: ['name', 'email', 'role'],
+                required: ['name', 'email'],
                 properties: {
                     name: { type: 'string', maxLength: 120, example: 'Maria Silva' },
                     email: { type: 'string', format: 'email', maxLength: 200, example: 'maria@example.com' },
                     phone: { type: 'string', maxLength: 20, example: '11999999999' },
-                    role: { type: 'string', enum: ['passenger', 'driver'], example: 'driver' },
                     vehicle: { type: 'string', maxLength: 120, example: 'Toyota Corolla 2020 — placa ABC1D23' },
                 },
             },
@@ -82,7 +119,6 @@ export const openApiDoc = {
                     name: { type: 'string', maxLength: 120 },
                     email: { type: 'string', format: 'email', maxLength: 200 },
                     phone: { type: 'string', maxLength: 20 },
-                    role: { type: 'string', enum: ['passenger', 'driver'] },
                     vehicle: { type: 'string', maxLength: 120 },
                 },
             },
@@ -107,10 +143,9 @@ export const openApiDoc = {
             },
             CreateTripBody: {
                 type: 'object',
-                required: ['driverId', 'origin', 'destination', 'departureAt', 'totalSeats', 'pricePerSeat'],
-                description: '`availableSeats` é definido automaticamente como igual a `totalSeats`. `status` inicial é sempre `open`.',
+                required: ['origin', 'destination', 'departureAt', 'totalSeats', 'pricePerSeat'],
+                description: 'Requer autenticação. O `driverId` é o usuário do token (não vai no corpo). `availableSeats` recebe o valor de `totalSeats` e `status` inicial é `open`.',
                 properties: {
-                    driverId: { $ref: '#/components/schemas/UUID' },
                     origin: { type: 'string', maxLength: 300, example: 'Belo Horizonte, MG' },
                     destination: { type: 'string', maxLength: 300, example: 'Ouro Preto, MG' },
                     departureAt: { type: 'string', format: 'date-time', example: '2026-06-01T08:00:00.000Z' },
@@ -143,11 +178,10 @@ export const openApiDoc = {
             },
             CreateSeatRequestBody: {
                 type: 'object',
-                required: ['tripId', 'passengerId'],
-                description: '`status` inicial é sempre `pending`.',
+                required: ['tripId'],
+                description: 'Requer autenticação. O `passengerId` é o usuário do token (não vai no corpo). `status` inicial é `pending`.',
                 properties: {
                     tripId: { $ref: '#/components/schemas/UUID' },
-                    passengerId: { $ref: '#/components/schemas/UUID' },
                     seats: { type: 'integer', minimum: 1, default: 1, example: 1 },
                     message: { type: 'string', example: 'Posso embarcar no centro?' },
                 },
@@ -179,9 +213,56 @@ export const openApiDoc = {
                 content: { 'application/json': { schema: { $ref: '#/components/schemas/NotFound' } } },
             },
             NoContent: { description: 'Removido com sucesso' },
+            Unauthorized: {
+                description: 'Token ausente ou inválido',
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorMessage' } } },
+            },
+            Forbidden: {
+                description: 'Sem permissão para esta ação (não é o dono do recurso)',
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorMessage' } } },
+            },
         },
     },
     paths: {
+        '/auth/register': {
+            post: {
+                tags: ['Auth'],
+                summary: 'Registrar usuário e obter token JWT',
+                requestBody: {
+                    required: true,
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/RegisterBody' } } },
+                },
+                responses: {
+                    '201': {
+                        description: 'Usuário registrado',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/AuthResponse' } } },
+                    },
+                    '400': { $ref: '#/components/responses/ValidationError' },
+                    '409': {
+                        description: 'E-mail já cadastrado',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorMessage' } } },
+                    },
+                },
+            },
+        },
+        '/auth/login': {
+            post: {
+                tags: ['Auth'],
+                summary: 'Login e obtenção do token JWT',
+                requestBody: {
+                    required: true,
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/LoginBody' } } },
+                },
+                responses: {
+                    '200': {
+                        description: 'Autenticado',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/AuthResponse' } } },
+                    },
+                    '400': { $ref: '#/components/responses/ValidationError' },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
+                },
+            },
+        },
         '/users': {
             post: {
                 tags: ['Users'],
@@ -247,6 +328,7 @@ export const openApiDoc = {
             post: {
                 tags: ['Trips'],
                 summary: 'Publicar viagem',
+                security: [{ bearerAuth: [] }],
                 requestBody: {
                     required: true,
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateTripBody' } } },
@@ -257,6 +339,7 @@ export const openApiDoc = {
                         content: { 'application/json': { schema: { $ref: '#/components/schemas/Trip' } } },
                     },
                     '400': { $ref: '#/components/responses/ValidationError' },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
                 },
             },
             get: {
@@ -286,6 +369,8 @@ export const openApiDoc = {
             put: {
                 tags: ['Trips'],
                 summary: 'Atualizar viagem',
+                description: 'Apenas o motorista dono da viagem.',
+                security: [{ bearerAuth: [] }],
                 requestBody: {
                     required: true,
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateTripBody' } } },
@@ -296,18 +381,30 @@ export const openApiDoc = {
                         content: { 'application/json': { schema: { $ref: '#/components/schemas/Trip' } } },
                     },
                     '400': { $ref: '#/components/responses/ValidationError' },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
+                    '403': { $ref: '#/components/responses/Forbidden' },
+                    '404': { $ref: '#/components/responses/NotFound' },
                 },
             },
             delete: {
                 tags: ['Trips'],
                 summary: 'Remover viagem',
-                responses: { '204': { $ref: '#/components/responses/NoContent' } },
+                description: 'Apenas o motorista dono da viagem.',
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    '204': { $ref: '#/components/responses/NoContent' },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
+                    '403': { $ref: '#/components/responses/Forbidden' },
+                    '404': { $ref: '#/components/responses/NotFound' },
+                },
             },
         },
         '/seat-requests': {
             post: {
                 tags: ['Seat Requests'],
                 summary: 'Solicitar vaga em uma viagem',
+                description: 'Requer autenticação. O passageiro é o usuário do token.',
+                security: [{ bearerAuth: [] }],
                 requestBody: {
                     required: true,
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateSeatRequestBody' } } },
@@ -318,6 +415,11 @@ export const openApiDoc = {
                         content: { 'application/json': { schema: { $ref: '#/components/schemas/SeatRequest' } } },
                     },
                     '400': { $ref: '#/components/responses/ValidationError' },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
+                    '409': {
+                        description: 'Já existe solicitação para essa viagem',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorMessage' } } },
+                    },
                 },
             },
             get: {
@@ -346,7 +448,9 @@ export const openApiDoc = {
             },
             put: {
                 tags: ['Seat Requests'],
-                summary: 'Atualizar solicitação',
+                summary: 'Atualizar solicitação (aceitar/recusar)',
+                description: 'Apenas o motorista da viagem associada pode responder.',
+                security: [{ bearerAuth: [] }],
                 requestBody: {
                     required: true,
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateSeatRequestBody' } } },
@@ -357,12 +461,22 @@ export const openApiDoc = {
                         content: { 'application/json': { schema: { $ref: '#/components/schemas/SeatRequest' } } },
                     },
                     '400': { $ref: '#/components/responses/ValidationError' },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
+                    '403': { $ref: '#/components/responses/Forbidden' },
+                    '404': { $ref: '#/components/responses/NotFound' },
                 },
             },
             delete: {
                 tags: ['Seat Requests'],
                 summary: 'Remover solicitação',
-                responses: { '204': { $ref: '#/components/responses/NoContent' } },
+                description: 'O passageiro autor ou o motorista da viagem.',
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    '204': { $ref: '#/components/responses/NoContent' },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
+                    '403': { $ref: '#/components/responses/Forbidden' },
+                    '404': { $ref: '#/components/responses/NotFound' },
+                },
             },
         },
     },
