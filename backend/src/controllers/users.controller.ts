@@ -12,21 +12,6 @@ const userSchema = z.object({
     vehicle: z.string().max(120).optional(),
 });
 
-router.post('/', async (req, res, next) => {
-    try {
-        const body = userSchema.parse(req.body);
-        const result = await usersService.create(body);
-        res.status(201).json(result ? sanitizeUser(result) : result);
-    } catch (e: any) {
-        if (e.errors) {
-            res.status(400).json(e.errors);
-        } else if (e.code === '23505') {
-            res.status(409).json({ error: 'E-mail já cadastrado' });
-        } else {
-            next(e);
-        }
-    }
-});
 
 router.get('/', async (req, res, next) => {
     try {

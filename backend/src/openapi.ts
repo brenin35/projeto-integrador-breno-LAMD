@@ -103,16 +103,6 @@ export const openApiDoc = {
                     updatedAt: { type: 'string', format: 'date-time', nullable: true },
                 },
             },
-            CreateUserBody: {
-                type: 'object',
-                required: ['name', 'email'],
-                properties: {
-                    name: { type: 'string', maxLength: 120, example: 'Maria Silva' },
-                    email: { type: 'string', format: 'email', maxLength: 200, example: 'maria@example.com' },
-                    phone: { type: 'string', maxLength: 20, example: '11999999999' },
-                    vehicle: { type: 'string', maxLength: 120, example: 'Toyota Corolla 2020 — placa ABC1D23' },
-                },
-            },
             UpdateUserBody: {
                 type: 'object',
                 properties: {
@@ -264,21 +254,6 @@ export const openApiDoc = {
             },
         },
         '/users': {
-            post: {
-                tags: ['Users'],
-                summary: 'Criar usuário',
-                requestBody: {
-                    required: true,
-                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateUserBody' } } },
-                },
-                responses: {
-                    '201': {
-                        description: 'Usuário criado',
-                        content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } },
-                    },
-                    '400': { $ref: '#/components/responses/ValidationError' },
-                },
-            },
             get: {
                 tags: ['Users'],
                 summary: 'Listar todos os usuários',
