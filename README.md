@@ -2,10 +2,10 @@
 
 **Aluno:** Breno de Oliveira Brandão
 **Disciplina:** Engenharia de Software — Lab. de Desenvolvimento de Aplicações Móveis e Distribuídas
-**Sprint:** 2 — 1º Semestre 2026
+**Sprint:** 3 — 1º Semestre 2026
 
 Marketplace de caronas intermunicipais (modelo BlaBlaCar). API REST em Node.js + Express + PostgreSQL,
-com **mensageria assíncrona via RabbitMQ (MOM)** e **autenticação JWT**.
+com **mensageria assíncrona via RabbitMQ (MOM)**, **autenticação JWT** e **app móvel Flutter** para o cliente.
 
 > 📄 Proposta completa do projeto: [Sprint_01-Proposta-LAMD.pdf](Sprint_01-Proposta-LAMD.pdf)
 
@@ -17,6 +17,15 @@ com **mensageria assíncrona via RabbitMQ (MOM)** e **autenticação JWT**.
 - 📝 Relatório de integração: [docs/sprint2-relatorio.md](docs/sprint2-relatorio.md)
 - 🔐 Autenticação JWT (`/auth/register`, `/auth/login`); um mesmo usuário pode ser motorista
   (na viagem que publica) e passageiro (na solicitação que faz).
+
+### Sprint 3 — App Flutter (cliente) + WebSocket
+
+- 📱 App do passageiro em **Flutter + Provider** (Clean Architecture): [app_cliente/](app_cliente/).
+- Telas: viagens disponíveis → detalhes/solicitar vaga → minhas solicitações + login/cadastro.
+- ⚡ **Atualização em tempo real via WebSocket**: o backend tem um **gateway WS** que consome o
+  RabbitMQ (fila `ws-gateway`) e empurra os eventos ao app — quando o motorista aceita uma
+  solicitação, a tela do cliente muda sozinha, sem polling.
+- 📐 Arquitetura do app: [docs/sprint3-arquitetura-app.md](docs/sprint3-arquitetura-app.md)
 ---
 
 A API é documentada com **Swagger UI**. Após subir o backend, abra no navegador:
