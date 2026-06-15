@@ -2,16 +2,15 @@ import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
+import '../services/realtime_service.dart';
 
-/// Estado de autenticação. Ao logar, injeta o token no [ApiClient].
-///
-/// (A conexão em tempo real via WebSocket será acoplada aqui quando essa
-/// funcionalidade for migrada.)
+
 class AuthProvider extends ChangeNotifier {
   final ApiClient _api;
   final AuthService _auth;
+  final RealtimeService _realtime;
 
-  AuthProvider(this._api, this._auth);
+  AuthProvider(this._api, this._auth, this._realtime);
 
   User? _user;
   String? _token;
@@ -43,6 +42,7 @@ class AuthProvider extends ChangeNotifier {
       _token = result.token;
       _user = result.user;
       _api.setToken(_token);
+      _realtime.connect(_token!);
       _loading = false;
       notifyListeners();
       return true;
@@ -58,6 +58,7 @@ class AuthProvider extends ChangeNotifier {
     _token = null;
     _user = null;
     _api.setToken(null);
+    _realtime.disconnect();
     notifyListeners();
   }
 }
