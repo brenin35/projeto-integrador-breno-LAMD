@@ -1,2 +1,17 @@
-*/node_modules
+# Dependências
+node_modules/
+
+# Variáveis de ambiente / segredos (o .env.example é versionado)
 .env
+.env.local
+.env.*.local
+
+# Logs e arquivos temporários
+*.log
+npm-debug.log*
+
+# Sistema operacional / editor
+.DS_Store
+Thumbs.db
+
+/tmp
