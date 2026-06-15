@@ -13,7 +13,14 @@ export async function publishEvent<T>(event: EventName, data: T): Promise<void> 
             persistent: true,
             contentType: 'application/json',
         });
-        console.log(`[publisher] evento publicado: ${event}`);
+
+        if (event === 'seat_request.created') {
+            const req = data as any;
+            console.log(`[publisher] evento publicado: ${event} (ID: ${req.id})`);
+            console.log(`      💡 Use o ID ${req.id} para aceitar via PUT /seat-requests/${req.id}`);
+        } else {
+            console.log(`[publisher] evento publicado: ${event}`);
+        }
     } catch (error) {
         console.error(`[publisher] falha ao publicar "${event}":`, (error as Error).message);
     }
