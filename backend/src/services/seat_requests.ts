@@ -43,6 +43,12 @@ export const seatRequestsService = {
         return result;
     },
 
+    /** Motorista responde a solicitação (aceitar/recusar): grava o status e o
+     *  momento da resposta. Reaproveita `update`, que publica o evento no MOM. */
+    async respond(id: string, status: 'accepted' | 'rejected') {
+        return this.update(id, { status, respondedAt: new Date() });
+    },
+
     async delete(id: string) {
         const [result] = await db.delete(seatRequests).where(eq(seatRequests.id, id)).returning();
         return result;

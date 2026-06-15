@@ -421,26 +421,6 @@ export const openApiDoc = {
                     '404': { $ref: '#/components/responses/NotFound' },
                 },
             },
-            put: {
-                tags: ['Seat Requests'],
-                summary: 'Atualizar solicitação (aceitar/recusar)',
-                description: 'Apenas o motorista da viagem associada pode responder.',
-                security: [{ bearerAuth: [] }],
-                requestBody: {
-                    required: true,
-                    content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateSeatRequestBody' } } },
-                },
-                responses: {
-                    '200': {
-                        description: 'Solicitação atualizada',
-                        content: { 'application/json': { schema: { $ref: '#/components/schemas/SeatRequest' } } },
-                    },
-                    '400': { $ref: '#/components/responses/ValidationError' },
-                    '401': { $ref: '#/components/responses/Unauthorized' },
-                    '403': { $ref: '#/components/responses/Forbidden' },
-                    '404': { $ref: '#/components/responses/NotFound' },
-                },
-            },
             delete: {
                 tags: ['Seat Requests'],
                 summary: 'Remover solicitação',
@@ -451,6 +431,50 @@ export const openApiDoc = {
                     '401': { $ref: '#/components/responses/Unauthorized' },
                     '403': { $ref: '#/components/responses/Forbidden' },
                     '404': { $ref: '#/components/responses/NotFound' },
+                },
+            },
+        },
+        '/seat-requests/{id}/accept': {
+            parameters: [{ $ref: '#/components/parameters/IdPath' }],
+            post: {
+                tags: ['Seat Requests'],
+                summary: 'Aceitar solicitação de vaga',
+                description: 'Apenas o motorista da viagem associada. Só funciona se ainda estiver `pending`.',
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    '200': {
+                        description: 'Solicitação aceita',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/SeatRequest' } } },
+                    },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
+                    '403': { $ref: '#/components/responses/Forbidden' },
+                    '404': { $ref: '#/components/responses/NotFound' },
+                    '409': {
+                        description: 'Solicitação não está mais pendente',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorMessage' } } },
+                    },
+                },
+            },
+        },
+        '/seat-requests/{id}/reject': {
+            parameters: [{ $ref: '#/components/parameters/IdPath' }],
+            post: {
+                tags: ['Seat Requests'],
+                summary: 'Recusar solicitação de vaga',
+                description: 'Apenas o motorista da viagem associada. Só funciona se ainda estiver `pending`.',
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    '200': {
+                        description: 'Solicitação recusada',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/SeatRequest' } } },
+                    },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
+                    '403': { $ref: '#/components/responses/Forbidden' },
+                    '404': { $ref: '#/components/responses/NotFound' },
+                    '409': {
+                        description: 'Solicitação não está mais pendente',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorMessage' } } },
+                    },
                 },
             },
         },

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import { z } from "zod";
 import { seatRequestsService } from "../services/seat_requests.js";
 import { tripsService } from "../services/trips.js";
@@ -8,12 +8,6 @@ export const router = Router();
 
 const createSeatRequestSchema = z.object({
     tripId: z.string().uuid(),
-    seats: z.number().int().min(1).optional(),
-    message: z.string().optional(),
-});
-
-const updateSeatRequestSchema = z.object({
-    status: z.enum(['pending', 'accepted', 'rejected', 'cancelled']).optional(),
     seats: z.number().int().min(1).optional(),
     message: z.string().optional(),
 });
@@ -76,40 +70,47 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-router.put('/:id', authenticate, async (req, res, next) => {
-    try {
-        const userId = req.user?.sub;
-        if (!userId) {
-            res.status(401).json({ error: 'Não autenticado' });
-            return;
-        }
-
-        if (!req.params.id || typeof req.params.id !== 'string') {
-            res.status(400).json({ error: 'ID da solicitação é obrigatório' });
-            return;
-        }
-
-        const seatRequest = await seatRequestsService.findById(req.params.id);
-        if (!seatRequest) {
-            res.status(404).json({ error: 'Seat Request not found' });
-            return;
-        }
-        const trip = await tripsService.findById(seatRequest.tripId);
-        if (!trip || trip.driverId !== userId) {
-            res.status(403).json({ error: 'Apenas o motorista da viagem pode responder a esta solicitação' });
-            return;
-        }
-        const body = updateSeatRequestSchema.parse(req.body);
-        const result = await seatRequestsService.update(req.params.id, body as any);
-        res.json(result);
-    } catch (e: any) {
-        if (e.errors) {
-            res.status(400).json(e.errors);
-        } else {
-            next(e);
-        }
+async function loadAsTripDriver(req: Request, res: Response) {
+    const userId = req.user?.sub;
+    if (!userId) {
+        res.status(401).json({ error: 'Não autenticado' });
+        return null;
     }
-});
+    const id = req.params.id;
+    if (!id || typeof id !== 'string') {
+        res.status(400).json({ error: 'ID da solicitação é obrigatório' });
+        return null;
+    }
+    const seatRequest = await seatRequestsService.findById(id);
+    if (!seatRequest) {
+        res.status(404).json({ error: 'Seat Request not found' });
+        return null;
+    }
+    const trip = await tripsService.findById(seatRequest.tripId);
+    if (!trip || trip.driverId !== userId) {
+        res.status(403).json({ error: 'Apenas o motorista da viagem pode responder a esta solicitação' });
+        return null;
+    }
+    return seatRequest;
+}
+
+async function respond(req: Request, res: Response, next: NextFunction, status: 'accepted' | 'rejected') {
+    try {
+        const seatRequest = await loadAsTripDriver(req, res);
+        if (!seatRequest) return;
+        if (seatRequest.status !== 'pending') {
+            res.status(409).json({ error: `Solicitação não está pendente (status atual: ${seatRequest.status})` });
+            return;
+        }
+        const result = await seatRequestsService.respond(seatRequest.id, status);
+        res.json(result);
+    } catch (e) {
+        next(e);
+    }
+}
+
+router.post('/:id/accept', authenticate, (req, res, next) => respond(req, res, next, 'accepted'));
+router.post('/:id/reject', authenticate, (req, res, next) => respond(req, res, next, 'rejected'));
 
 router.delete('/:id', authenticate, async (req, res, next) => {
     try {
