@@ -6,6 +6,7 @@ import { router as tripsRouter } from './src/controllers/trips.controller.js'
 import { router as seatRequestsRouter } from './src/controllers/seat_requests.controller.js'
 import { openApiDoc } from './src/openapi.js'
 import { getChannel } from './src/messaging/connection.js'
+import { startWsGateway } from './src/ws/gateway.js'
 
 const app = express()
 const port = 3000
@@ -25,7 +26,7 @@ app.use('/users', usersRouter)
 app.use('/trips', tripsRouter)
 app.use('/seat-requests', seatRequestsRouter)
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`API escutando em http://localhost:${port}`)
     console.log(`Docs disponíveis em http://localhost:${port}/docs`)
 
@@ -33,3 +34,5 @@ app.listen(port, () => {
         .then(() => console.log('MOM (RabbitMQ) conectado e exchange declarado'))
         .catch((err) => console.warn(`MOM indisponível no boot: ${err.message} (será reconectado sob demanda)`))
 })
+
+startWsGateway(server)
