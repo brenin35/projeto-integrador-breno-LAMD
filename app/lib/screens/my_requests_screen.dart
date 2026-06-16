@@ -4,6 +4,7 @@ import '../models/seat_request.dart';
 import '../state/auth_provider.dart';
 import '../state/my_requests_provider.dart';
 import '../state/trips_provider.dart';
+import '../theme.dart';
 import '../widgets/seat_request_card.dart';
 
 /// Minhas solicitações. A lista se atualiza sozinha quando o motorista aceita
@@ -59,7 +60,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('🔔 $message'), backgroundColor: Colors.indigo),
+          SnackBar(content: Text('🔔 $message'), backgroundColor: AppColors.info),
         );
         context.read<MyRequestsProvider>().clearBanner();
       });
@@ -70,26 +71,47 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     }
     return RefreshIndicator(
       onRefresh: _reload,
+      color: AppColors.brand,
       child: p.requests.isEmpty
           ? ListView(
-              children: const [
-                SizedBox(height: 160),
+              children: [
+                const SizedBox(height: 120),
                 Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.event_seat_outlined, size: 56, color: Colors.grey),
-                      SizedBox(height: 12),
-                      Text('Você ainda não solicitou vagas.', style: TextStyle(color: Colors.grey)),
+                      Container(
+                        height: 88,
+                        width: 88,
+                        decoration: BoxDecoration(
+                          color: AppColors.brand.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.event_seat_rounded, size: 42, color: AppColors.brand),
+                      ),
+                      const SizedBox(height: 18),
+                      const Text(
+                        'Você ainda não solicitou vagas',
+                        style: TextStyle(color: AppColors.ink, fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 6),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 40),
+                        child: Text(
+                          'Explore as viagens disponíveis e peça sua carona.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppColors.inkSoft, fontSize: 14, height: 1.45),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ],
             )
           : ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               itemCount: p.requests.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 4),
+              separatorBuilder: (_, _) => const SizedBox(height: 14),
               itemBuilder: (_, i) {
                 final req = p.requests[i];
                 return SeatRequestCard(

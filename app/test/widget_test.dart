@@ -1,5 +1,6 @@
 // Smoke test: sem autenticação, o app abre na tela de login.
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 
 import 'package:app/main.dart';
 import 'package:app/services/api_client.dart';
@@ -13,6 +14,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Caronascar'), findsOneWidget);
-    expect(find.text('Entrar'), findsOneWidget);
+    // "Entrar" aparece na aba do seletor e no botão de submit.
+    expect(find.text('Entrar'), findsWidgets);
+    expect(find.widgetWithText(FilledButton, 'Entrar'), findsOneWidget);
   });
 }

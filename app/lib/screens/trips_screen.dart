@@ -4,6 +4,7 @@ import '../models/seat_request.dart';
 import '../state/auth_provider.dart';
 import '../state/my_requests_provider.dart';
 import '../state/trips_provider.dart';
+import '../theme.dart';
 import '../widgets/trip_card.dart';
 import 'trip_details_screen.dart';
 
@@ -55,19 +56,32 @@ class _TripsScreenState extends State<TripsScreen> {
 
     return RefreshIndicator(
       onRefresh: _reload,
+      color: AppColors.brand,
       child: list.isEmpty
           ? ListView(
               children: const [
-                SizedBox(height: 160),
-                _CenteredMessage(icon: Icons.directions_car_outlined, message: 'Nenhuma viagem disponível no momento.'),
+                SizedBox(height: 120),
+                _CenteredMessage(
+                  icon: Icons.explore_off_rounded,
+                  message: 'Nenhuma viagem disponível no momento.\nPuxe para baixo para atualizar.',
+                ),
               ],
             )
           : ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              itemCount: list.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 4),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              itemCount: list.length + 1,
+              separatorBuilder: (_, _) => const SizedBox(height: 14),
               itemBuilder: (_, i) {
-                final trip = list[i];
+                if (i == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      '${list.length} ${list.length == 1 ? 'viagem disponível' : 'viagens disponíveis'}',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.inkSoft),
+                    ),
+                  );
+                }
+                final trip = list[i - 1];
                 return TripCard(
                   trip: trip,
                   myRequest: myByTrip[trip.id],
@@ -95,15 +109,31 @@ class _CenteredMessage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 56, color: Colors.grey),
-          const SizedBox(height: 12),
+          Container(
+            height: 88,
+            width: 88,
+            decoration: BoxDecoration(
+              color: AppColors.brand.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 42, color: AppColors.brand),
+          ),
+          const SizedBox(height: 18),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey)),
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.inkSoft, fontSize: 14.5, height: 1.45),
+            ),
           ),
           if (actionLabel != null) ...[
-            const SizedBox(height: 12),
-            FilledButton.tonal(onPressed: onAction, child: Text(actionLabel!)),
+            const SizedBox(height: 20),
+            FilledButton.tonalIcon(
+              onPressed: onAction,
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(actionLabel!),
+            ),
           ],
         ],
       ),

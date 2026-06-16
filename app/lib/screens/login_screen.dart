@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/auth_provider.dart';
+import '../theme.dart';
 
 /// Tela de login / cadastro. Ao autenticar, o [AuthGate] troca para o app.
 class LoginScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isRegister = false;
+  bool _obscure = true;
 
   final _name = TextEditingController();
   final _email = TextEditingController();
@@ -49,103 +51,190 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Icon(Icons.directions_car_filled, size: 80, color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Caronascar',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _isRegister ? 'Crie sua conta para começar' : 'Entre para pedir uma carona',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 32),
-                  if (_isRegister) ...[
-                    TextFormField(
-                      controller: _name,
-                      decoration: InputDecoration(
-                        labelText: 'Nome completo', 
-                        prefixIcon: const Icon(Icons.person),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
-                    ),
-                    const SizedBox(height: 16),
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.brandGradient),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _brandHeader(),
+                    const SizedBox(height: 28),
+                    _formCard(auth),
                   ],
-                  TextFormField(
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'E-mail', 
-                      prefixIcon: const Icon(Icons.email),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    validator: (v) => (v == null || !v.contains('@')) ? 'E-mail inválido' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _password,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: _isRegister ? 'Crie uma senha' : 'Senha', 
-                      prefixIcon: const Icon(Icons.lock),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    validator: (v) => (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
-                  ),
-                  if (_isRegister) ...[
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _phone,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        labelText: 'Telefone (opcional)', 
-                        prefixIcon: const Icon(Icons.phone),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 32),
-                  FilledButton(
-                    onPressed: auth.loading ? null : () => _submit(auth),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: auth.loading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : Text(
-                            _isRegister ? 'Criar Conta' : 'Entrar',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: auth.loading ? null : () => setState(() => _isRegister = !_isRegister),
-                    child: Text(
-                      _isRegister ? 'Já tenho conta — entrar' : 'Não tenho conta — cadastrar',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _brandHeader() {
+    return Column(
+      children: [
+        Container(
+          height: 72,
+          width: 72,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+          ),
+          child: const Icon(Icons.directions_car_filled_rounded, size: 38, color: Colors.white),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Caronascar',
+          style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.5),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Caronas mais simples, mais baratas',
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 14),
+        ),
+      ],
+    );
+  }
+
+  Widget _formCard(AuthProvider auth) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 30, offset: const Offset(0, 12)),
+        ],
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _segmented(),
+            const SizedBox(height: 24),
+            if (_isRegister) ...[
+              _field(
+                controller: _name,
+                label: 'Nome completo',
+                icon: Icons.person_outline_rounded,
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
+              ),
+              const SizedBox(height: 14),
+            ],
+            _field(
+              controller: _email,
+              label: 'E-mail',
+              icon: Icons.alternate_email_rounded,
+              keyboardType: TextInputType.emailAddress,
+              validator: (v) => (v == null || !v.contains('@')) ? 'E-mail inválido' : null,
+            ),
+            const SizedBox(height: 14),
+            _field(
+              controller: _password,
+              label: _isRegister ? 'Crie uma senha' : 'Senha',
+              icon: Icons.lock_outline_rounded,
+              obscureText: _obscure,
+              suffix: IconButton(
+                icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 20),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              ),
+              validator: (v) => (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
+            ),
+            if (_isRegister) ...[
+              const SizedBox(height: 14),
+              _field(
+                controller: _phone,
+                label: 'Telefone (opcional)',
+                icon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
+              ),
+            ],
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: auth.loading ? null : () => _submit(auth),
+              child: auth.loading
+                  ? const SizedBox(
+                      height: 22, width: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
+                    )
+                  : Text(_isRegister ? 'Criar conta' : 'Entrar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _segmented() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.canvas,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          _segmentTab('Entrar', !_isRegister, () => setState(() => _isRegister = false)),
+          _segmentTab('Cadastrar', _isRegister, () => setState(() => _isRegister = true)),
+        ],
+      ),
+    );
+  }
+
+  Widget _segmentTab(String label, bool active, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: active ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(11),
+            boxShadow: active
+                ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, 2))]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14.5,
+              color: active ? AppColors.brand : AppColors.inkSoft,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _field({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    Widget? suffix,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        suffixIcon: suffix,
       ),
     );
   }

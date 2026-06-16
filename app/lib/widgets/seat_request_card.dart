@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/seat_request.dart';
 import '../models/trip.dart';
+import '../theme.dart';
 import '../utils/format.dart';
 import 'status_chip.dart';
 
@@ -21,46 +22,75 @@ class SeatRequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = trip;
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.route, size: 20),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: AppColors.brand.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.route_rounded, size: 20, color: AppColors.brand),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    t != null ? '${t.origin}  →  ${t.destination}' : 'Viagem ${request.tripId}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    t != null ? '${t.origin} → ${t.destination}' : 'Viagem ${request.tripId}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5, color: AppColors.ink),
                   ),
                 ),
+                const SizedBox(width: 8),
                 StatusChip(request.status),
               ],
             ),
-            if (t != null) ...[
-              const SizedBox(height: 10),
-              _line(Icons.schedule, formatDateTime(t.departureAt)),
-              const SizedBox(height: 4),
-              _line(Icons.attach_money, 'R\$ ${t.pricePerSeat} por vaga'),
-            ],
-            const SizedBox(height: 4),
-            _line(Icons.event_seat, '${request.seats} vaga(s) solicitada(s)'),
+            const SizedBox(height: 14),
+            const Divider(height: 1),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 18,
+              runSpacing: 10,
+              children: [
+                if (t != null) _line(Icons.calendar_today_rounded, formatDate(t.departureAt)),
+                if (t != null) _line(Icons.schedule_rounded, formatTime(t.departureAt)),
+                _line(Icons.event_seat_rounded, '${request.seats} vaga(s)'),
+                if (t != null) _line(Icons.payments_rounded, 'R\$ ${t.pricePerSeat}'),
+              ],
+            ),
             if (request.message != null && request.message!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text('"${request.message}"', style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.black54)),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.canvas,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '“${request.message}”',
+                  style: const TextStyle(fontStyle: FontStyle.italic, color: AppColors.inkSoft, fontSize: 13.5, height: 1.4),
+                ),
+              ),
             ],
             if (onCancel != null && _canCancel) ...[
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: onCancel,
-                  icon: const Icon(Icons.exit_to_app, size: 18),
+                  icon: const Icon(Icons.logout_rounded, size: 18),
                   label: const Text('Sair da viagem'),
-                  style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.danger,
+                    minimumSize: const Size.fromHeight(46),
+                    side: BorderSide(color: AppColors.danger.withValues(alpha: 0.4)),
+                  ),
                 ),
               ),
             ],
@@ -71,10 +101,11 @@ class SeatRequestCard extends StatelessWidget {
   }
 
   Widget _line(IconData icon, String text) => Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: Colors.grey),
+          Icon(icon, size: 15, color: AppColors.inkSoft),
           const SizedBox(width: 6),
-          Expanded(child: Text(text, style: const TextStyle(color: Colors.black87))),
+          Text(text, style: const TextStyle(color: AppColors.ink, fontSize: 13.5, fontWeight: FontWeight.w500)),
         ],
       );
 }

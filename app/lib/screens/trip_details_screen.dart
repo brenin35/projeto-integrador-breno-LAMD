@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/seat_request.dart';
 import '../models/trip.dart';
 import '../state/my_requests_provider.dart';
+import '../theme.dart';
 import '../utils/format.dart';
 import '../widgets/status_chip.dart';
 
@@ -15,80 +16,54 @@ class TripDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final myRequest = context.watch<MyRequestsProvider>().activeForTrip(trip.id);
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Detalhes da viagem')),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.zero,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${trip.origin} → ${trip.destination}',
-                  style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-              StatusChip(trip.status),
-            ],
-          ),
-          if (myRequest != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle, color: theme.colorScheme.onPrimaryContainer),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Você já está nesta viagem',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
+          _hero(),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (myRequest != null) ...[
+                  _enrolledBanner(context, myRequest),
+                  const SizedBox(height: 20),
+                ],
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Column(
+                      children: [
+                        _InfoRow(icon: Icons.event_rounded, label: 'Partida', value: formatDateTime(trip.departureAt)),
+                        const Divider(height: 1),
+                        _InfoRow(
+                          icon: Icons.event_seat_rounded,
+                          label: 'Vagas disponíveis',
+                          value: '${trip.availableSeats} de ${trip.totalSeats}',
+                        ),
+                        const Divider(height: 1),
+                        _InfoRow(
+                          icon: Icons.payments_rounded,
+                          label: 'Preço por vaga',
+                          value: 'R\$ ${trip.pricePerSeat}',
+                          highlight: true,
+                        ),
+                        if (trip.notes != null && trip.notes!.isNotEmpty) ...[
+                          const Divider(height: 1),
+                          _InfoRow(
+                            icon: Icons.sticky_note_2_outlined,
+                            label: 'Observações do motorista',
+                            value: trip.notes!,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  StatusChip(myRequest.status),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 24),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.grey.shade200),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _InfoRow(icon: Icons.schedule, label: 'Partida', value: formatDateTime(trip.departureAt)),
-                  const Divider(height: 24),
-                  _InfoRow(
-                    icon: Icons.event_seat,
-                    label: 'Vagas',
-                    value: '${trip.availableSeats} de ${trip.totalSeats} disponíveis',
-                  ),
-                  const Divider(height: 24),
-                  _InfoRow(
-                    icon: Icons.attach_money,
-                    label: 'Preço por vaga',
-                    value: 'R\$ ${trip.pricePerSeat}',
-                  ),
-                  if (trip.notes != null && trip.notes!.isNotEmpty) ...[
-                    const Divider(height: 24),
-                    _InfoRow(icon: Icons.notes, label: 'Observações do Motorista', value: trip.notes!),
-                  ],
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -97,36 +72,99 @@ class TripDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _bottomBar(BuildContext context, SeatRequest? myRequest) {
-    if (myRequest != null) {
-      return Padding(
-        padding: const EdgeInsets.all(20),
-        child: OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.red,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  Widget _hero() {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(gradient: AppColors.brandGradient),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: StatusChipOnDark(trip.status),
           ),
-          onPressed: () => _leave(context, myRequest),
-          icon: const Icon(Icons.exit_to_app),
-          label: const Text('Sair da viagem', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          _heroPoint(Icons.trip_origin, 'Origem', trip.origin),
+          Padding(
+            padding: const EdgeInsets.only(left: 11),
+            child: Container(width: 2, height: 26, color: Colors.white.withValues(alpha: 0.4)),
+          ),
+          _heroPoint(Icons.location_on, 'Destino', trip.destination),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroPoint(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: Colors.white, size: 24),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 2),
+              Text(value, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+            ],
+          ),
         ),
-      );
-    }
-    final canRequest = trip.availableSeats > 0;
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: FilledButton.icon(
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        onPressed: canRequest ? () => _openRequestSheet(context) : null,
-        icon: const Icon(Icons.add_circle_outline),
-        label: Text(
-          canRequest ? 'Solicitar Vaga' : 'Esgotado',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+      ],
+    );
+  }
+
+  Widget _enrolledBanner(BuildContext context, SeatRequest myRequest) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle_rounded, color: AppColors.success),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Você já está nesta viagem',
+              style: TextStyle(color: AppColors.ink, fontWeight: FontWeight.w700, fontSize: 14.5),
+            ),
+          ),
+          StatusChip(myRequest.status),
+        ],
+      ),
+    );
+  }
+
+  Widget _bottomBar(BuildContext context, SeatRequest? myRequest) {
+    final content = myRequest != null
+        ? OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.danger,
+              side: BorderSide(color: AppColors.danger.withValues(alpha: 0.4)),
+            ),
+            onPressed: () => _leave(context, myRequest),
+            icon: const Icon(Icons.logout_rounded),
+            label: const Text('Sair da viagem'),
+          )
+        : FilledButton.icon(
+            onPressed: trip.availableSeats > 0 ? () => _openRequestSheet(context) : null,
+            icon: Icon(trip.availableSeats > 0 ? Icons.add_circle_outline_rounded : Icons.block_rounded),
+            label: Text(trip.availableSeats > 0 ? 'Solicitar vaga' : 'Esgotado'),
+          );
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: AppColors.line)),
+      ),
+      child: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+        child: content,
       ),
     );
   }
@@ -142,7 +180,11 @@ class TripDetailsScreen extends StatelessWidget {
         content: const Text('Deseja cancelar sua solicitação nesta viagem?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Voltar')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sair')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger, minimumSize: const Size(88, 44)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sair'),
+          ),
         ],
       ),
     );
@@ -165,35 +207,61 @@ class TripDetailsScreen extends StatelessWidget {
   }
 }
 
+/// Variante do StatusChip legível sobre o gradiente escuro do hero.
+class StatusChipOnDark extends StatelessWidget {
+  final String status;
+  const StatusChipOnDark(this.status, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: StatusChip(status),
+    );
+  }
+}
+
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _InfoRow({required this.icon, required this.label, required this.value});
+  final bool highlight;
+  const _InfoRow({required this.icon, required this.label, required this.value, this.highlight = false});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.brand.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 24, color: Theme.of(context).colorScheme.primary),
+            child: Icon(icon, size: 22, color: AppColors.brand),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
+                Text(label, style: const TextStyle(color: AppColors.inkSoft, fontSize: 12.5, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
-                Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: highlight ? 18 : 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: highlight ? AppColors.brand : AppColors.ink,
+                  ),
+                ),
               ],
             ),
           ),
@@ -245,50 +313,99 @@ class _RequestSheetState extends State<_RequestSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        left: 24,
+        right: 24,
+        top: 12,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Solicitar vaga', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Text('Quantidade de vagas'),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline),
-                onPressed: _seats > 1 ? () => setState(() => _seats--) : null,
-              ),
-              Text('$_seats', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline),
-                onPressed: _seats < widget.trip.availableSeats ? () => setState(() => _seats++) : null,
-              ),
-            ],
+          Center(
+            child: Container(
+              width: 44,
+              height: 5,
+              decoration: BoxDecoration(color: AppColors.line, borderRadius: BorderRadius.circular(3)),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
+          const Text('Solicitar vaga', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+          const SizedBox(height: 4),
+          Text(
+            '${widget.trip.origin} → ${widget.trip.destination}',
+            style: const TextStyle(color: AppColors.inkSoft, fontSize: 14),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.canvas,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Text('Quantidade de vagas', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14.5)),
+                const Spacer(),
+                _StepperButton(
+                  icon: Icons.remove_rounded,
+                  onTap: _seats > 1 ? () => setState(() => _seats--) : null,
+                ),
+                SizedBox(
+                  width: 40,
+                  child: Text('$_seats', textAlign: TextAlign.center, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                ),
+                _StepperButton(
+                  icon: Icons.add_rounded,
+                  onTap: _seats < widget.trip.availableSeats ? () => setState(() => _seats++) : null,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
           TextField(
             controller: _message,
             decoration: const InputDecoration(
               labelText: 'Mensagem ao motorista (opcional)',
-              border: OutlineInputBorder(),
+              alignLabelWithHint: true,
             ),
-            maxLines: 2,
+            maxLines: 3,
           ),
-          const SizedBox(height: 16),
-          FilledButton(
+          const SizedBox(height: 20),
+          FilledButton.icon(
             onPressed: _submitting ? null : _submit,
-            style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-            child: _submitting
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Confirmar solicitação'),
+            icon: _submitting
+                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+                : const Icon(Icons.send_rounded, size: 20),
+            label: Text(_submitting ? 'Enviando...' : 'Confirmar solicitação'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+  const _StepperButton({required this.icon, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Material(
+      color: enabled ? Colors.white : AppColors.canvas,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: enabled ? AppColors.line : Colors.transparent),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, size: 22, color: enabled ? AppColors.brand : AppColors.muted),
+        ),
       ),
     );
   }

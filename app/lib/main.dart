@@ -10,6 +10,7 @@ import 'state/trips_provider.dart';
 import 'state/my_requests_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_shell.dart';
+import 'theme.dart';
 
 void main() {
   final api = ApiClient();
@@ -33,10 +34,7 @@ class CaronascarApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Caronascar',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorSchemeSeed: const Color(0xFF2E7D32),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.light,
         home: const AuthGate(),
       ),
     );

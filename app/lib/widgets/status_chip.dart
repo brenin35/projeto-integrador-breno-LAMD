@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../theme.dart';
 
+/// Selo de status com ponto colorido. Usado para viagens e solicitações.
 class StatusChip extends StatelessWidget {
   final String status;
   const StatusChip(this.status, {super.key});
@@ -8,14 +10,26 @@ class StatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = _styleFor(status);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: style.color.withValues(alpha: 0.15),
+        color: style.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: style.color.withValues(alpha: 0.25)),
       ),
-      child: Text(
-        style.label,
-        style: TextStyle(color: style.color, fontWeight: FontWeight.w600, fontSize: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: style.color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            style.label,
+            style: TextStyle(color: style.color, fontWeight: FontWeight.w700, fontSize: 12, letterSpacing: 0.1),
+          ),
+        ],
       ),
     );
   }
@@ -23,23 +37,23 @@ class StatusChip extends StatelessWidget {
   _ChipStyle _styleFor(String s) {
     switch (s) {
       case 'pending':
-        return const _ChipStyle(Colors.orange, 'Pendente');
+        return const _ChipStyle(AppColors.pending, 'Pendente');
       case 'accepted':
-        return const _ChipStyle(Colors.green, 'Aceita');
+        return const _ChipStyle(AppColors.success, 'Aceita');
       case 'rejected':
-        return const _ChipStyle(Colors.red, 'Recusada');
+        return const _ChipStyle(AppColors.danger, 'Recusada');
       case 'cancelled':
-        return const _ChipStyle(Colors.grey, 'Cancelada');
+        return const _ChipStyle(AppColors.muted, 'Cancelada');
       case 'open':
-        return const _ChipStyle(Colors.blue, 'Aberta');
+        return const _ChipStyle(AppColors.info, 'Aberta');
       case 'full':
-        return const _ChipStyle(Colors.purple, 'Lotada');
+        return const _ChipStyle(Color(0xFF7C3AED), 'Lotada');
       case 'started':
-        return const _ChipStyle(Colors.teal, 'Em viagem');
+        return const _ChipStyle(Color(0xFF0D9488), 'Em viagem');
       case 'completed':
-        return const _ChipStyle(Colors.blueGrey, 'Concluída');
+        return const _ChipStyle(AppColors.muted, 'Concluída');
       default:
-        return _ChipStyle(Colors.grey, s);
+        return _ChipStyle(AppColors.muted, s);
     }
   }
 }
