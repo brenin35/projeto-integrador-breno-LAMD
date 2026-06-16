@@ -112,6 +112,39 @@ async function respond(req: Request, res: Response, next: NextFunction, status: 
 router.post('/:id/accept', authenticate, (req, res, next) => respond(req, res, next, 'accepted'));
 router.post('/:id/reject', authenticate, (req, res, next) => respond(req, res, next, 'rejected'));
 
+// Passageiro sai da viagem (cancela a própria solicitação).
+router.post('/:id/cancel', authenticate, async (req, res, next) => {
+    try {
+        const userId = req.user?.sub;
+        if (!userId) {
+            res.status(401).json({ error: 'Não autenticado' });
+            return;
+        }
+        const id = req.params.id;
+        if (!id || typeof id !== 'string') {
+            res.status(400).json({ error: 'ID da solicitação é obrigatório' });
+            return;
+        }
+        const seatRequest = await seatRequestsService.findById(id);
+        if (!seatRequest) {
+            res.status(404).json({ error: 'Seat Request not found' });
+            return;
+        }
+        if (seatRequest.passengerId !== userId) {
+            res.status(403).json({ error: 'Apenas o passageiro autor pode sair da viagem' });
+            return;
+        }
+        if (seatRequest.status !== 'pending' && seatRequest.status !== 'accepted') {
+            res.status(409).json({ error: `Não é possível sair (status atual: ${seatRequest.status})` });
+            return;
+        }
+        const result = await seatRequestsService.cancel(id);
+        res.json(result);
+    } catch (e) {
+        next(e);
+    }
+});
+
 router.delete('/:id', authenticate, async (req, res, next) => {
     try {
         const userId = req.user?.sub;

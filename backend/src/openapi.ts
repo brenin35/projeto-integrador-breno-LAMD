@@ -176,14 +176,6 @@ export const openApiDoc = {
                     message: { type: 'string', example: 'Posso embarcar no centro?' },
                 },
             },
-            UpdateSeatRequestBody: {
-                type: 'object',
-                properties: {
-                    status: { type: 'string', enum: ['pending', 'accepted', 'rejected', 'cancelled'] },
-                    seats: { type: 'integer', minimum: 1 },
-                    message: { type: 'string' },
-                },
-            },
         },
         parameters: {
             IdPath: {
@@ -473,6 +465,28 @@ export const openApiDoc = {
                     '404': { $ref: '#/components/responses/NotFound' },
                     '409': {
                         description: 'Solicitação não está mais pendente',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorMessage' } } },
+                    },
+                },
+            },
+        },
+        '/seat-requests/{id}/cancel': {
+            parameters: [{ $ref: '#/components/parameters/IdPath' }],
+            post: {
+                tags: ['Seat Requests'],
+                summary: 'Sair da viagem (cancelar solicitação)',
+                description: 'Apenas o passageiro autor. Funciona se estiver `pending` ou `accepted`.',
+                security: [{ bearerAuth: [] }],
+                responses: {
+                    '200': {
+                        description: 'Solicitação cancelada',
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/SeatRequest' } } },
+                    },
+                    '401': { $ref: '#/components/responses/Unauthorized' },
+                    '403': { $ref: '#/components/responses/Forbidden' },
+                    '404': { $ref: '#/components/responses/NotFound' },
+                    '409': {
+                        description: 'Não é possível sair no status atual',
                         content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorMessage' } } },
                     },
                 },

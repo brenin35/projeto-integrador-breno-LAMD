@@ -49,6 +49,11 @@ export const seatRequestsService = {
         return this.update(id, { status, respondedAt: new Date() });
     },
 
+    /** Passageiro sai da viagem / desiste da solicitação (status -> cancelled). */
+    async cancel(id: string) {
+        return this.update(id, { status: 'cancelled' });
+    },
+
     async delete(id: string) {
         const [result] = await db.delete(seatRequests).where(eq(seatRequests.id, id)).returning();
         return result;
