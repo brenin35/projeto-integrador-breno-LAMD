@@ -18,6 +18,7 @@ class MyRequestsProvider extends ChangeNotifier {
   List<SeatRequest> requests = [];
   bool loading = false;
   String? error;
+  String? _myUserId;
 
   /// Mensagem do último evento em tempo real (para exibir um banner/snackbar).
   String? lastEventMessage;
@@ -33,6 +34,7 @@ class MyRequestsProvider extends ChangeNotifier {
   }
 
   Future<void> load(String myUserId) async {
+    _myUserId = myUserId;
     loading = true;
     error = null;
     notifyListeners();
@@ -71,6 +73,10 @@ class MyRequestsProvider extends ChangeNotifier {
   }
 
   void _onEvent(RealtimeEvent ev) {
+    if (ev.type == 'connected') {
+      if (_myUserId != null) load(_myUserId!);
+      return;
+    }
     if (ev.type == 'seat_request.status_changed') {
       final id = ev.data['id'] as String?;
       final status = ev.data['status'] as String?;
@@ -80,6 +86,9 @@ class MyRequestsProvider extends ChangeNotifier {
         requests[idx] = requests[idx].copyWith(status: status);
         lastEventMessage = 'Sua solicitação agora está "$status"';
         notifyListeners();
+      } else if (_myUserId != null) {
+        // Solicitação ainda não carregada localmente: recarrega.
+        load(_myUserId!);
       }
     } else if (ev.type == 'trip.status_changed') {
       final status = ev.data['status'] as String?;

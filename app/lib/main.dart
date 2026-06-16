@@ -27,7 +27,7 @@ class CaronascarApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider(api, AuthService(api), realtime)),
-        ChangeNotifierProvider(create: (_) => TripsProvider(TripService(api))),
+        ChangeNotifierProvider(create: (_) => TripsProvider(TripService(api), realtime)),
         ChangeNotifierProvider(create: (_) => MyRequestsProvider(SeatRequestService(api), realtime)),
       ],
       child: MaterialApp(

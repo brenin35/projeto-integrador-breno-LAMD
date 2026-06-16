@@ -117,6 +117,13 @@ async function respond(req: Request, res: Response, next: NextFunction, status: 
             res.status(409).json({ error: `Solicitação não está pendente (status atual: ${seatRequest.status})` });
             return;
         }
+        if (status === 'accepted') {
+            const trip = await tripsService.findById(seatRequest.tripId);
+            if (trip && trip.availableSeats < seatRequest.seats) {
+                res.status(409).json({ error: 'Não há vagas suficientes nesta viagem' });
+                return;
+            }
+        }
         const result = await seatRequestsService.respond(seatRequest.id, status);
         res.json(result);
     } catch (e) {

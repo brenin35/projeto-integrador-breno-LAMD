@@ -1,6 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "../config/index.js";
 import { seatRequests } from "../models/seat_requests.sql.js";
+import { tripsService } from "./trips.js";
 import { publishEvent } from "../messaging/publisher.js";
 import { EVENTS } from "../messaging/events.js";
 
@@ -70,14 +71,41 @@ export const seatRequestsService = {
     },
 
     /** Motorista responde a solicitação (aceitar/recusar): grava o status e o
-     *  momento da resposta. Reaproveita `update`, que publica o evento no MOM. */
+     *  momento da resposta. Aceitar reserva vagas na viagem. */
     async respond(id: string, status: 'accepted' | 'rejected') {
+        const before = await this.findById(id);
+        if (status === 'accepted' && before) {
+            await this.reserveSeats(before.tripId, before.seats);
+        }
         return this.update(id, { status, respondedAt: new Date() });
     },
 
-    /** Passageiro sai da viagem / desiste da solicitação (status -> cancelled). */
+
     async cancel(id: string) {
-        return this.update(id, { status: 'cancelled' });
+        const before = await this.findById(id);
+        const result = await this.update(id, { status: 'cancelled' });
+        if (before && before.status === 'accepted') {
+            await this.releaseSeats(before.tripId, before.seats);
+        }
+        return result;
+    },
+
+    async reserveSeats(tripId: string, seats: number) {
+        const trip = await tripsService.findById(tripId);
+        if (!trip) return;
+        const remaining = Math.max(0, trip.availableSeats - seats);
+        await tripsService.update(tripId, {
+            availableSeats: remaining,
+            status: remaining === 0 ? 'full' : trip.status,
+        });
+    },
+
+    async releaseSeats(tripId: string, seats: number) {
+        const trip = await tripsService.findById(tripId);
+        if (!trip) return;
+        const remaining = Math.min(trip.totalSeats, trip.availableSeats + seats);
+        const status = trip.status === 'full' && remaining > 0 ? 'open' : trip.status;
+        await tripsService.update(tripId, { availableSeats: remaining, status });
     },
 
     async delete(id: string) {
