@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/seat_request.dart';
 import '../state/auth_provider.dart';
 import '../state/my_requests_provider.dart';
+import '../state/trips_provider.dart';
 import '../widgets/seat_request_card.dart';
 
 /// Minhas solicitações. A lista se atualiza sozinha quando o motorista aceita
-/// ou recusa (evento via WebSocket → provider → rebuild).
+/// ou recusa (evento via WebSocket → provider → rebuild). Aqui também dá para
+/// **sair da viagem** (cancelar uma solicitação ativa).
 class MyRequestsScreen extends StatefulWidget {
   const MyRequestsScreen({super.key});
 
@@ -14,20 +17,41 @@ class MyRequestsScreen extends StatefulWidget {
 }
 
 class _MyRequestsScreenState extends State<MyRequestsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
+  Future<void> _reload() async {
+    final tripsProvider = context.read<TripsProvider>();
+    final myRequests = context.read<MyRequestsProvider>();
+    final userId = context.read<AuthProvider>().user?.id;
+    await tripsProvider.load();
+    if (userId != null) await myRequests.load(userId);
   }
 
-  void _reload() {
-    final user = context.read<AuthProvider>().user;
-    if (user != null) context.read<MyRequestsProvider>().load(user.id);
+  Future<void> _cancel(SeatRequest req) async {
+    final provider = context.read<MyRequestsProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sair da viagem'),
+        content: const Text('Deseja cancelar esta solicitação?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Voltar')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sair')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      await provider.cancel(req.id);
+      messenger.showSnackBar(const SnackBar(content: Text('Você saiu da viagem.')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final p = context.watch<MyRequestsProvider>();
+    final trips = context.watch<TripsProvider>();
 
     // Quando chega um evento em tempo real, mostra um aviso e limpa o flag.
     if (p.lastEventMessage != null) {
@@ -45,7 +69,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     return RefreshIndicator(
-      onRefresh: () async => _reload(),
+      onRefresh: _reload,
       child: p.requests.isEmpty
           ? ListView(
               children: const [
@@ -62,10 +86,18 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                 ),
               ],
             )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 12),
               itemCount: p.requests.length,
-              itemBuilder: (_, i) => SeatRequestCard(request: p.requests[i]),
+              separatorBuilder: (_, _) => const SizedBox(height: 4),
+              itemBuilder: (_, i) {
+                final req = p.requests[i];
+                return SeatRequestCard(
+                  request: req,
+                  trip: trips.byId(req.tripId),
+                  onCancel: () => _cancel(req),
+                );
+              },
             ),
     );
   }

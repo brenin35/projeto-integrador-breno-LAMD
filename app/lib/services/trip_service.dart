@@ -5,13 +5,10 @@ class TripService {
   final ApiClient _api;
   TripService(this._api);
 
-  /// Viagens disponíveis para o passageiro: abertas e com vaga.
-  Future<List<Trip>> listAvailable() async {
+  /// Todas as viagens (a UI separa as disponíveis das que o usuário já está).
+  Future<List<Trip>> listAll() async {
     final data = await _api.get('/trips') as List;
-    return data
-        .map((e) => Trip.fromJson(e as Map<String, dynamic>))
-        .where((t) => t.status == 'open' && t.availableSeats > 0)
-        .toList()
+    return data.map((e) => Trip.fromJson(e as Map<String, dynamic>)).toList()
       ..sort((a, b) => a.departureAt.compareTo(b.departureAt));
   }
 

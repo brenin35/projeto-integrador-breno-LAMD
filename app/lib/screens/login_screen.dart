@@ -60,60 +60,86 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.directions_car_filled, size: 64, color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(height: 8),
+                  Icon(Icons.directions_car_filled, size: 80, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(height: 16),
                   Text(
                     'Caronascar',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 8),
                   Text(
-                    _isRegister ? 'Crie sua conta' : 'Entre para pedir uma carona',
+                    _isRegister ? 'Crie sua conta para começar' : 'Entre para pedir uma carona',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.grey),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                   if (_isRegister) ...[
                     TextFormField(
                       controller: _name,
-                      decoration: const InputDecoration(labelText: 'Nome', border: OutlineInputBorder()),
+                      decoration: InputDecoration(
+                        labelText: 'Nome completo', 
+                        prefixIcon: const Icon(Icons.person),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                       validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                   ],
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'E-mail', border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: 'E-mail', 
+                      prefixIcon: const Icon(Icons.email),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     validator: (v) => (v == null || !v.contains('@')) ? 'E-mail inválido' : null,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _password,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Senha', border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: _isRegister ? 'Crie uma senha' : 'Senha', 
+                      prefixIcon: const Icon(Icons.lock),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     validator: (v) => (v == null || v.length < 6) ? 'Mínimo 6 caracteres' : null,
                   ),
                   if (_isRegister) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _phone,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'Telefone (opcional)', border: OutlineInputBorder()),
+                      decoration: InputDecoration(
+                        labelText: 'Telefone (opcional)', 
+                        prefixIcon: const Icon(Icons.phone),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                     ),
                   ],
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                   FilledButton(
                     onPressed: auth.loading ? null : () => _submit(auth),
-                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     child: auth.loading
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : Text(_isRegister ? 'Cadastrar' : 'Entrar'),
+                        : Text(
+                            _isRegister ? 'Criar Conta' : 'Entrar',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   TextButton(
                     onPressed: auth.loading ? null : () => setState(() => _isRegister = !_isRegister),
-                    child: Text(_isRegister ? 'Já tenho conta — entrar' : 'Não tenho conta — cadastrar'),
+                    child: Text(
+                      _isRegister ? 'Já tenho conta — entrar' : 'Não tenho conta — cadastrar',
+                      style: const TextStyle(fontSize: 14),
+                    ),
                   ),
                 ],
               ),

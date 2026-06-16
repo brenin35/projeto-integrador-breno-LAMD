@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/auth_provider.dart';
+import '../state/trips_provider.dart';
+import '../state/my_requests_provider.dart';
 import 'trips_screen.dart';
 import 'my_requests_screen.dart';
 
@@ -16,8 +18,18 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
-  static const _titles = ['Viagens disponíveis', 'Minhas solicitações'];
+  static const _titles = ['Viagens', 'Minhas solicitações'];
   static const _screens = [TripsScreen(), MyRequestsScreen()];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<AuthProvider>().user?.id;
+      context.read<TripsProvider>().load();
+      if (userId != null) context.read<MyRequestsProvider>().load(userId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

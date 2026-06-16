@@ -26,4 +26,9 @@ class SeatRequestService {
         .where((r) => r.passengerId == myUserId)
         .toList();
   }
+
+  Future<SeatRequest> cancel(String id) async {
+    final data = await _api.post('/seat-requests/$id/cancel', {});
+    return SeatRequest.fromJson(data as Map<String, dynamic>);
+  }
 }

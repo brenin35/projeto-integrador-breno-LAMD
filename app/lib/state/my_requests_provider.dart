@@ -18,7 +18,19 @@ class MyRequestsProvider extends ChangeNotifier {
   List<SeatRequest> requests = [];
   bool loading = false;
   String? error;
+
+  /// Mensagem do último evento em tempo real (para exibir um banner/snackbar).
   String? lastEventMessage;
+
+  /// Solicitação ativa (pendente ou aceita) do usuário para uma viagem, se houver.
+  SeatRequest? activeForTrip(String tripId) {
+    for (final r in requests) {
+      if (r.tripId == tripId && (r.status == 'pending' || r.status == 'accepted')) {
+        return r;
+      }
+    }
+    return null;
+  }
 
   Future<void> load(String myUserId) async {
     loading = true;
@@ -42,6 +54,14 @@ class MyRequestsProvider extends ChangeNotifier {
     requests = [created, ...requests];
     notifyListeners();
     return created;
+  }
+
+  /// Sair da viagem / cancelar a própria solicitação.
+  Future<void> cancel(String id) async {
+    final updated = await _service.cancel(id);
+    final idx = requests.indexWhere((r) => r.id == id);
+    if (idx >= 0) requests[idx] = updated;
+    notifyListeners();
   }
 
   void _onEvent(RealtimeEvent ev) {
