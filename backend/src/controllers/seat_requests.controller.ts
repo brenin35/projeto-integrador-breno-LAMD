@@ -29,6 +29,21 @@ router.post('/', authenticate, async (req, res, next) => {
             res.status(400).json({ error: 'Você não pode solicitar vaga na sua própria viagem' });
             return;
         }
+
+        const existing = await seatRequestsService.findByTripAndPassenger(body.tripId, userId);
+        if (existing) {
+            if (existing.status === 'pending' || existing.status === 'accepted') {
+                res.status(409).json({ error: 'Você já tem uma solicitação ativa para essa viagem' });
+                return;
+            }
+            const reactivated = await seatRequestsService.reactivate(existing.id, {
+                seats: body.seats,
+                message: body.message,
+            });
+            res.status(201).json(reactivated);
+            return;
+        }
+
         const result = await seatRequestsService.create({
             ...body,
             passengerId: userId,

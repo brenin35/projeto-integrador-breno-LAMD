@@ -51,7 +51,13 @@ class MyRequestsProvider extends ChangeNotifier {
     String? message,
   }) async {
     final created = await _service.create(tripId: tripId, seats: seats, message: message);
-    requests = [created, ...requests];
+    // Pode ser uma solicitação reaberta (mesmo id): substitui em vez de duplicar.
+    final idx = requests.indexWhere((r) => r.id == created.id);
+    if (idx >= 0) {
+      requests[idx] = created;
+    } else {
+      requests = [created, ...requests];
+    }
     notifyListeners();
     return created;
   }

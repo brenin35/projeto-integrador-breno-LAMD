@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "../config/index.js";
 import { seatRequests } from "../models/seat_requests.sql.js";
 import { publishEvent } from "../messaging/publisher.js";
@@ -25,6 +25,32 @@ export const seatRequestsService = {
 
     async findById(id: string) {
         const [result] = await db.select().from(seatRequests).where(eq(seatRequests.id, id));
+        return result;
+    },
+
+    async findByTripAndPassenger(tripId: string, passengerId: string) {
+        const [result] = await db.select().from(seatRequests)
+            .where(and(eq(seatRequests.tripId, tripId), eq(seatRequests.passengerId, passengerId)));
+        return result;
+    },
+
+    async reactivate(id: string, data: { seats?: number | undefined; message?: string | null | undefined }) {
+        const [result] = await db.update(seatRequests).set({
+            status: 'pending',
+            seats: data.seats ?? 1,
+            message: data.message ?? null,
+            respondedAt: null,
+            updatedAt: new Date(),
+        }).where(eq(seatRequests.id, id)).returning();
+        if (result) {
+            await publishEvent(EVENTS.SEAT_REQUEST_CREATED, {
+                id: result.id,
+                tripId: result.tripId,
+                passengerId: result.passengerId,
+                seats: result.seats,
+                status: result.status,
+            });
+        }
         return result;
     },
 
