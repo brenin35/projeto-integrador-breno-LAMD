@@ -14,7 +14,11 @@ export const tripsService = {
                 origin: result.origin,
                 destination: result.destination,
                 departureAt: result.departureAt,
+                totalSeats: result.totalSeats,
                 availableSeats: result.availableSeats,
+                pricePerSeat: result.pricePerSeat,
+                notes: result.notes ?? null,
+                status: result.status,
             });
         }
         return result;

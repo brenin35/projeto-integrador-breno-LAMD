@@ -32,12 +32,20 @@ class TripsProvider extends ChangeNotifier {
         load();
         break;
       case 'trip.created':
-        final origin = ev.data['origin'] as String?;
-        final destination = ev.data['destination'] as String?;
-        lastEventMessage = (origin != null && destination != null)
-            ? 'Nova viagem: $origin → $destination'
-            : 'Uma nova viagem foi publicada!';
-        load();
+        try {
+          final newTrip = Trip.fromJson(ev.data);
+          // Insere imediatamente na lista local — sem round-trip HTTP.
+          // Se já existe (reentrega do broker), não duplica.
+          if (!trips.any((t) => t.id == newTrip.id)) {
+            trips = [newTrip, ...trips]
+              ..sort((a, b) => a.departureAt.compareTo(b.departureAt));
+          }
+          lastEventMessage = 'Nova viagem: ${newTrip.origin} → ${newTrip.destination}';
+        } catch (_) {
+          lastEventMessage = 'Uma nova viagem foi publicada!';
+        }
+        notifyListeners(); // imediato — UI atualiza antes do HTTP
+        load(); // sync em background para garantir consistência
         break;
     }
   }
