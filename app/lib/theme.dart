@@ -8,25 +8,25 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Marca — verde "estrada/eco" com um tom mais profundo e moderno.
-  static const Color brand = Color(0xFF1B7A4B);
-  static const Color brandDark = Color(0xFF0E5C36);
-  static const Color brandLight = Color(0xFF2EA56A);
+  // Marca — roxo profundo, com cara de produto/fintech.
+  static const Color brand = Color(0xFF6D28D9);
+  static const Color brandDark = Color(0xFF4C1D95);
+  static const Color brandLight = Color(0xFF8B5CF6);
   static const Color accent = Color(0xFFF5A623); // âmbar para destaques (preço)
 
-  // Neutros
-  static const Color ink = Color(0xFF111813);
-  static const Color inkSoft = Color(0xFF55615A);
-  static const Color line = Color(0xFFE6EAE7);
+  // Neutros (levemente arroxeados, para harmonizar com a marca)
+  static const Color ink = Color(0xFF1A1825);
+  static const Color inkSoft = Color(0xFF5C5870);
+  static const Color line = Color(0xFFE7E5EF);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color canvas = Color(0xFFF4F7F5);
+  static const Color canvas = Color(0xFFF6F5FB);
 
   // Status
   static const Color pending = Color(0xFFF59E0B);
   static const Color success = Color(0xFF16A34A);
   static const Color danger = Color(0xFFDC2626);
-  static const Color info = Color(0xFF2563EB);
-  static const Color muted = Color(0xFF94A3B8);
+  static const Color info = Color(0xFF6D28D9);
+  static const Color muted = Color(0xFF8B8A99);
 
   static const LinearGradient brandGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -78,7 +78,7 @@ class AppTheme {
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: AppColors.line),
         ),
       ),
@@ -86,19 +86,19 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.brand,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(54),
+          minimumSize: const Size.fromHeight(52),
           elevation: 0,
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.1),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.ink,
-          minimumSize: const Size.fromHeight(54),
+          minimumSize: const Size.fromHeight(52),
           side: const BorderSide(color: AppColors.line),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -115,19 +115,19 @@ class AppTheme {
         hintStyle: const TextStyle(color: AppColors.muted),
         labelStyle: const TextStyle(color: AppColors.inkSoft),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.line),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.brand, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.danger),
         ),
       ),
@@ -155,19 +155,19 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.ink,
         contentTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
         ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }

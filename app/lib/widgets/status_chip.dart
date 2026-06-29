@@ -13,7 +13,7 @@ class StatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: style.color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: style.color.withValues(alpha: 0.25)),
       ),
       child: Row(
@@ -47,7 +47,7 @@ class StatusChip extends StatelessWidget {
       case 'open':
         return const _ChipStyle(AppColors.info, 'Aberta');
       case 'full':
-        return const _ChipStyle(Color(0xFF7C3AED), 'Lotada');
+        return const _ChipStyle(AppColors.accent, 'Lotada');
       case 'started':
         return const _ChipStyle(Color(0xFF0D9488), 'Em viagem');
       case 'completed':

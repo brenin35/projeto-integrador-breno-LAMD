@@ -142,7 +142,7 @@ class TripManageScreen extends StatelessWidget {
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
+          decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
           child: Text('$count', style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
         ),
       ],
@@ -192,7 +192,7 @@ class TripManageScreen extends StatelessWidget {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: AppColors.canvas, borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: AppColors.canvas, borderRadius: BorderRadius.circular(8)),
                   child: Text('“${r.message}”',
                       style: const TextStyle(fontStyle: FontStyle.italic, color: AppColors.inkSoft, fontSize: 13.5)),
                 ),

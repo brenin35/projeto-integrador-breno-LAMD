@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/seat_request.dart';
 import '../models/trip.dart';
 import '../state/my_requests_provider.dart';
+import '../state/trips_provider.dart';
 import '../theme.dart';
 import '../utils/format.dart';
 import '../widgets/status_chip.dart';
@@ -15,6 +16,9 @@ class TripDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Usa a versão "viva" da viagem (atualizada via WebSocket) quando disponível,
+    // para refletir mudanças de status/vagas sem precisar reabrir a tela.
+    final live = context.watch<TripsProvider>().byId(trip.id) ?? trip;
     final myRequest = context.watch<MyRequestsProvider>().activeForTrip(trip.id);
 
     return Scaffold(
@@ -22,7 +26,7 @@ class TripDetailsScreen extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          _hero(),
+          _hero(live),
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -42,7 +46,7 @@ class TripDetailsScreen extends StatelessWidget {
                         _InfoRow(
                           icon: Icons.event_seat_rounded,
                           label: 'Vagas disponíveis',
-                          value: '${trip.availableSeats} de ${trip.totalSeats}',
+                          value: '${live.availableSeats} de ${live.totalSeats}',
                         ),
                         const Divider(height: 1),
                         _InfoRow(
@@ -68,11 +72,11 @@ class TripDetailsScreen extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: _bottomBar(context, myRequest),
+      bottomNavigationBar: _bottomBar(context, myRequest, live),
     );
   }
 
-  Widget _hero() {
+  Widget _hero(Trip live) {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(gradient: AppColors.brandGradient),
@@ -82,7 +86,7 @@ class TripDetailsScreen extends StatelessWidget {
         children: [
           Align(
             alignment: Alignment.centerRight,
-            child: StatusChipOnDark(trip.status),
+            child: StatusChipOnDark(live.status),
           ),
           const SizedBox(height: 4),
           _heroPoint(Icons.trip_origin, 'Origem', trip.origin),
@@ -121,7 +125,7 @@ class TripDetailsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.success.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
       ),
       child: Row(
@@ -140,22 +144,41 @@ class TripDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _bottomBar(BuildContext context, SeatRequest? myRequest) {
-    final content = myRequest != null
-        ? OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.danger,
-              side: BorderSide(color: AppColors.danger.withValues(alpha: 0.4)),
-            ),
-            onPressed: () => _leave(context, myRequest),
-            icon: const Icon(Icons.logout_rounded),
-            label: const Text('Sair da viagem'),
-          )
-        : FilledButton.icon(
-            onPressed: trip.availableSeats > 0 ? () => _openRequestSheet(context) : null,
-            icon: Icon(trip.availableSeats > 0 ? Icons.add_circle_outline_rounded : Icons.block_rounded),
-            label: Text(trip.availableSeats > 0 ? 'Solicitar vaga' : 'Esgotado'),
-          );
+  Widget _bottomBar(BuildContext context, SeatRequest? myRequest, Trip live) {
+    final finished = live.status == 'completed' || live.status == 'cancelled';
+    final accepting = live.status == 'open' && live.availableSeats > 0;
+    // Só dá para sair enquanto a viagem ainda não começou/terminou.
+    final canLeave = live.status == 'open' || live.status == 'full';
+
+    final Widget content;
+    if (myRequest != null) {
+      content = OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.danger,
+          side: BorderSide(color: AppColors.danger.withValues(alpha: 0.4)),
+        ),
+        onPressed: canLeave ? () => _leave(context, myRequest) : null,
+        icon: Icon(canLeave ? Icons.logout_rounded : Icons.lock_outline_rounded),
+        label: Text(canLeave ? 'Sair da viagem' : 'Viagem ${live.status == 'completed' ? 'concluída' : 'em andamento'}'),
+      );
+    } else if (accepting) {
+      content = FilledButton.icon(
+        onPressed: () => _openRequestSheet(context, live),
+        icon: const Icon(Icons.add_circle_outline_rounded),
+        label: const Text('Solicitar vaga'),
+      );
+    } else {
+      final label = finished
+          ? 'Viagem encerrada'
+          : live.status != 'open'
+              ? 'Indisponível'
+              : 'Esgotado';
+      content = FilledButton.icon(
+        onPressed: null,
+        icon: const Icon(Icons.block_rounded),
+        label: Text(label),
+      );
+    }
 
     return Container(
       decoration: const BoxDecoration(
@@ -198,11 +221,11 @@ class TripDetailsScreen extends StatelessWidget {
     }
   }
 
-  void _openRequestSheet(BuildContext context) {
+  void _openRequestSheet(BuildContext context, Trip live) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _RequestSheet(trip: trip),
+      builder: (_) => _RequestSheet(trip: live),
     );
   }
 }
@@ -218,7 +241,7 @@ class StatusChipOnDark extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: StatusChip(status),
     );
@@ -341,7 +364,7 @@ class _RequestSheetState extends State<_RequestSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.canvas,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [

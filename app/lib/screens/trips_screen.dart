@@ -30,6 +30,18 @@ class _TripsScreenState extends State<TripsScreen> {
     final trips = context.watch<TripsProvider>();
     final mine = context.watch<MyRequestsProvider>();
 
+    // Aviso em tempo real quando uma nova viagem é publicada (trip.created via WS).
+    if (trips.lastEventMessage != null) {
+      final message = trips.lastEventMessage!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('🔔 $message'), backgroundColor: AppColors.info),
+        );
+        context.read<TripsProvider>().clearBanner();
+      });
+    }
+
     if (trips.loading && trips.trips.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }

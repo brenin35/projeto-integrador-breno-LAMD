@@ -16,7 +16,11 @@ class SeatRequestCard extends StatelessWidget {
 
   const SeatRequestCard({super.key, required this.request, this.trip, this.onCancel});
 
-  bool get _canCancel => request.status == 'pending' || request.status == 'accepted';
+  bool get _canCancel {
+    final active = request.status == 'pending' || request.status == 'accepted';
+    final tripOpen = trip == null || (trip!.status != 'completed' && trip!.status != 'cancelled');
+    return active && tripOpen;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +37,7 @@ class SeatRequestCard extends StatelessWidget {
                   padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
                     color: AppColors.brand.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.route_rounded, size: 20, color: AppColors.brand),
                 ),
@@ -70,7 +74,7 @@ class SeatRequestCard extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppColors.canvas,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '“${request.message}”',

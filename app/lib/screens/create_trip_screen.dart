@@ -98,7 +98,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             const SizedBox(height: 16),
             InkWell(
               onTap: _pickDeparture,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
               child: InputDecorator(
                 decoration: const InputDecoration(labelText: 'Partida', prefixIcon: Icon(Icons.event_rounded)),
                 child: Text(formatDateTime(_departure), style: const TextStyle(fontSize: 16, color: AppColors.ink)),
@@ -109,7 +109,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.line),
               ),
               child: Row(

@@ -13,20 +13,38 @@ class TripsProvider extends ChangeNotifier {
   StreamSubscription<RealtimeEvent>? _sub;
 
   TripsProvider(this._service, this._realtime) {
-    _sub = _realtime.events.listen((ev) {
-      // Recarrega quando (re)conecta, quando uma viagem muda de status, ou
-      // quando uma solicitação muda (aceitar/cancelar altera as vagas).
-      if (ev.type == 'connected' ||
-          ev.type == 'trip.status_changed' ||
-          ev.type == 'seat_request.status_changed') {
-        load();
-      }
-    });
+    _sub = _realtime.events.listen(_onEvent);
   }
 
   List<Trip> trips = [];
   bool loading = false;
   String? error;
+
+  /// Mensagem do último evento em tempo real (ex.: nova viagem publicada).
+  String? lastEventMessage;
+
+  void _onEvent(RealtimeEvent ev) {
+    switch (ev.type) {
+      case 'connected':
+      case 'trip.status_changed':
+      case 'seat_request.status_changed':
+        // Recarrega: (re)conexão, mudança de status ou de vagas (aceitar/cancelar).
+        load();
+        break;
+      case 'trip.created':
+        final origin = ev.data['origin'] as String?;
+        final destination = ev.data['destination'] as String?;
+        lastEventMessage = (origin != null && destination != null)
+            ? 'Nova viagem: $origin → $destination'
+            : 'Uma nova viagem foi publicada!';
+        load();
+        break;
+    }
+  }
+
+  void clearBanner() {
+    lastEventMessage = null;
+  }
 
   /// Viagens que ainda dá para solicitar (abertas e com vaga).
   List<Trip> get available =>
