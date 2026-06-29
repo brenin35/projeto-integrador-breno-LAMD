@@ -7,6 +7,16 @@ import { EVENTS } from "../messaging/events.js";
 export const tripsService = {
     async create(data: typeof trips.$inferInsert) {
         const [result] = await db.insert(trips).values(data).returning();
+        if (result) {
+            await publishEvent(EVENTS.TRIP_CREATED, {
+                id: result.id,
+                driverId: result.driverId,
+                origin: result.origin,
+                destination: result.destination,
+                departureAt: result.departureAt,
+                availableSeats: result.availableSeats,
+            });
+        }
         return result;
     },
 

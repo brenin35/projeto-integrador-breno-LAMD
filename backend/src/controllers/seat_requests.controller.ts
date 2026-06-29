@@ -29,6 +29,10 @@ router.post('/', authenticate, async (req, res, next) => {
             res.status(400).json({ error: 'Você não pode solicitar vaga na sua própria viagem' });
             return;
         }
+        if (trip.status !== 'open') {
+            res.status(409).json({ error: 'Esta viagem não está mais aceitando solicitações' });
+            return;
+        }
 
         const existing = await seatRequestsService.findByTripAndPassenger(body.tripId, userId);
         if (existing) {
@@ -154,6 +158,11 @@ router.post('/:id/cancel', authenticate, async (req, res, next) => {
         }
         if (seatRequest.passengerId !== userId) {
             res.status(403).json({ error: 'Apenas o passageiro autor pode sair da viagem' });
+            return;
+        }
+        const trip = await tripsService.findById(seatRequest.tripId);
+        if (trip && (trip.status === 'completed' || trip.status === 'cancelled')) {
+            res.status(409).json({ error: 'A viagem já foi finalizada; não é possível sair dela' });
             return;
         }
         if (seatRequest.status !== 'pending' && seatRequest.status !== 'accepted') {

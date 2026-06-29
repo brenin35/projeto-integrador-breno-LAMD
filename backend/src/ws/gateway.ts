@@ -49,6 +49,14 @@ function sendToUser(userId: string, type: string, data: unknown): void {
     }
 }
 
+/** Transmite para todos os usuários conectados, exceto um (ex.: o autor). */
+function broadcast(type: string, data: unknown, exceptUserId?: string): void {
+    for (const userId of clients.keys()) {
+        if (userId === exceptUserId) continue;
+        sendToUser(userId, type, data);
+    }
+}
+
 async function routeEvent(envelope: EventEnvelope): Promise<void> {
     const data = envelope.data as Record<string, any>;
     switch (envelope.event) {
@@ -63,11 +71,20 @@ async function routeEvent(envelope: EventEnvelope): Promise<void> {
             if (trip) sendToUser(trip.driverId, envelope.event, data);
             break;
         }
+        case EVENTS.TRIP_CREATED: {
+            // Nova viagem publicada: avisa todos os usuários conectados, exceto o
+            // próprio motorista que a publicou.
+            broadcast(envelope.event, data, data.driverId);
+            break;
+        }
         case EVENTS.TRIP_STATUS_CHANGED: {
             sendToUser(data.driverId, envelope.event, data);
+
             const requests = await seatRequestsService.findAll();
+            const notified = new Set<string>();
             for (const r of requests) {
-                if (r.tripId === data.id && r.status === 'accepted') {
+                if (r.tripId === data.id && !notified.has(r.passengerId)) {
+                    notified.add(r.passengerId);
                     sendToUser(r.passengerId, envelope.event, data);
                 }
             }
@@ -80,7 +97,7 @@ async function startConsumer(): Promise<void> {
     const channel = await getChannel();
     await channel.assertQueue(QUEUE, { durable: true });
     await channel.bindQueue(QUEUE, EXCHANGE, 'seat_request.*');
-    await channel.bindQueue(QUEUE, EXCHANGE, EVENTS.TRIP_STATUS_CHANGED);
+    await channel.bindQueue(QUEUE, EXCHANGE, 'trip.*');
     await channel.consume(QUEUE, async (msg) => {
         if (!msg) return;
         try {

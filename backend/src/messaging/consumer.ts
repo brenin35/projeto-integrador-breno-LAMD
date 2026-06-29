@@ -18,6 +18,8 @@ interface TripEvent {
     driverId: string;
     status: string;
     previousStatus?: string;
+    origin?: string;
+    destination?: string;
 }
 
 function handleEvent(envelope: EventEnvelope): void {
@@ -35,6 +37,14 @@ function handleEvent(envelope: EventEnvelope): void {
             console.log(
                 `🔔 [notificação → passageiro] Sua solicitação ${data.id} mudou de ` +
                 `"${data.previousStatus}" para "${data.status}" na viagem ${data.tripId}.`,
+            );
+            break;
+        }
+        case EVENTS.TRIP_CREATED: {
+            const data = envelope.data as TripEvent;
+            console.log(
+                `🔔 [notificação → todos] Nova viagem ${data.id} publicada: ` +
+                `${data.origin ?? '?'} → ${data.destination ?? '?'} (motorista ${data.driverId}).`,
             );
             break;
         }
@@ -56,7 +66,7 @@ async function start(): Promise<void> {
 
     await channel.assertQueue(QUEUE, { durable: true });
     await channel.bindQueue(QUEUE, EXCHANGE, 'seat_request.*');
-    await channel.bindQueue(QUEUE, EXCHANGE, EVENTS.TRIP_STATUS_CHANGED);
+    await channel.bindQueue(QUEUE, EXCHANGE, 'trip.*');
     await channel.prefetch(10);
 
     console.log(`[consumer] aguardando eventos na fila "${QUEUE}" (Ctrl+C para sair)...`);
