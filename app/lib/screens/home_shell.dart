@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/auth_provider.dart';
-import '../state/trips_provider.dart';
-import '../state/my_requests_provider.dart';
 import '../state/driver_provider.dart';
+import '../state/my_requests_provider.dart';
+import '../state/trips_provider.dart';
 import '../theme.dart';
 import 'trips_screen.dart';
 import 'my_requests_screen.dart';
@@ -40,6 +40,24 @@ class _HomeShellState extends State<HomeShell> {
     final user = context.watch<AuthProvider>().user;
     final firstName = (user?.name ?? '').split(' ').first;
     final driver = _mode == AppMode.driver;
+
+    final tripsMsg = context.watch<TripsProvider>().lastEventMessage;
+    final driverMsg = context.watch<DriverProvider>().lastEventMessage;
+    final requestsMsg = context.watch<MyRequestsProvider>().lastEventMessage;
+    for (final msg in [tripsMsg, driverMsg, requestsMsg]) {
+      if (msg != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('🔔 $msg'), backgroundColor: AppColors.info),
+          );
+          context.read<TripsProvider>().clearBanner();
+          context.read<DriverProvider>().clearBanner();
+          context.read<MyRequestsProvider>().clearBanner();
+        });
+        break; // só um snackbar por frame
+      }
+    }
 
     final String title;
     final String subtitle;

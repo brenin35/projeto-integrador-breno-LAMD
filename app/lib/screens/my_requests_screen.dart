@@ -54,18 +54,6 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     final p = context.watch<MyRequestsProvider>();
     final trips = context.watch<TripsProvider>();
 
-    // Quando chega um evento em tempo real, mostra um aviso e limpa o flag.
-    if (p.lastEventMessage != null) {
-      final message = p.lastEventMessage!;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('🔔 $message'), backgroundColor: AppColors.info),
-        );
-        context.read<MyRequestsProvider>().clearBanner();
-      });
-    }
-
     if (p.loading && p.requests.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }

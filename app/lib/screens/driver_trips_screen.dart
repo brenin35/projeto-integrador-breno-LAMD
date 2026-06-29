@@ -28,18 +28,6 @@ class _DriverTripsScreenState extends State<DriverTripsScreen> {
   Widget build(BuildContext context) {
     final p = context.watch<DriverProvider>();
 
-    // Notifica novas solicitações (chega via WebSocket → seat_request.created).
-    if (p.lastEventMessage != null) {
-      final msg = p.lastEventMessage!;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('🔔 $msg'), backgroundColor: AppColors.info),
-        );
-        context.read<DriverProvider>().clearBanner();
-      });
-    }
-
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
