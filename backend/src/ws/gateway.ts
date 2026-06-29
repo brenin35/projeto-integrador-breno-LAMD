@@ -52,9 +52,12 @@ function sendToUser(userId: string, type: string, data: unknown): void {
 async function routeEvent(envelope: EventEnvelope): Promise<void> {
     const data = envelope.data as Record<string, any>;
     switch (envelope.event) {
-        case EVENTS.SEAT_REQUEST_STATUS_CHANGED:
+        case EVENTS.SEAT_REQUEST_STATUS_CHANGED: {
             sendToUser(data.passengerId, envelope.event, data);
+            const trip = await tripsService.findById(data.tripId);
+            if (trip) sendToUser(trip.driverId, envelope.event, data);
             break;
+        }
         case EVENTS.SEAT_REQUEST_CREATED: {
             const trip = await tripsService.findById(data.tripId);
             if (trip) sendToUser(trip.driverId, envelope.event, data);
