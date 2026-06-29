@@ -4,10 +4,12 @@ import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'services/trip_service.dart';
 import 'services/seat_request_service.dart';
+import 'services/user_service.dart';
 import 'services/realtime_service.dart';
 import 'state/auth_provider.dart';
 import 'state/trips_provider.dart';
 import 'state/my_requests_provider.dart';
+import 'state/driver_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_shell.dart';
 import 'theme.dart';
@@ -30,6 +32,9 @@ class CaronascarApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider(api, AuthService(api), realtime)),
         ChangeNotifierProvider(create: (_) => TripsProvider(TripService(api), realtime)),
         ChangeNotifierProvider(create: (_) => MyRequestsProvider(SeatRequestService(api), realtime)),
+        ChangeNotifierProvider(
+          create: (_) => DriverProvider(TripService(api), SeatRequestService(api), UserService(api), realtime),
+        ),
       ],
       child: MaterialApp(
         title: 'Caronascar',

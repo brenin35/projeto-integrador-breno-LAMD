@@ -31,4 +31,19 @@ class SeatRequestService {
     final data = await _api.post('/seat-requests/$id/cancel', {});
     return SeatRequest.fromJson(data as Map<String, dynamic>);
   }
+
+  Future<List<SeatRequest>> listAll() async {
+    final data = await _api.get('/seat-requests') as List;
+    return data.map((e) => SeatRequest.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<SeatRequest> accept(String id) async {
+    final data = await _api.post('/seat-requests/$id/accept', {});
+    return SeatRequest.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<SeatRequest> reject(String id) async {
+    final data = await _api.post('/seat-requests/$id/reject', {});
+    return SeatRequest.fromJson(data as Map<String, dynamic>);
+  }
 }
