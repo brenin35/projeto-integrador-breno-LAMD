@@ -18,7 +18,6 @@ com **mensageria assíncrona via RabbitMQ (MOM)**, **autenticação JWT** e **ap
 - 🔐 Autenticação JWT (`/auth/register`, `/auth/login`); um mesmo usuário pode ser motorista
   (na viagem que publica) e passageiro (na solicitação que faz).
 
-### Sprint 3 — App Flutter (cliente) + WebSocket
 
 - 📱 App do passageiro em **Flutter + Provider** (Clean Architecture): [app_cliente/](app_cliente/).
 - Telas: viagens disponíveis → detalhes/solicitar vaga → minhas solicitações + login/cadastro.
@@ -26,6 +25,8 @@ com **mensageria assíncrona via RabbitMQ (MOM)**, **autenticação JWT** e **ap
   RabbitMQ (fila `ws-gateway`) e empurra os eventos ao app — quando o motorista aceita uma
   solicitação, a tela do cliente muda sozinha, sem polling.
 - 📐 Arquitetura do app: [docs/sprint3-arquitetura-app.md](docs/sprint3-arquitetura-app.md)
+- 📋 Relatório técnico final: [docs/relatorio-tecnico-final.md](docs/relatorio-tecnico-final.md)
+> 🎥 Demonstração em vídeo: [https://youtu.be/Qwfz6mwlvtI](https://youtu.be/Qwfz6mwlvtI)
 ---
 
 A API é documentada com **Swagger UI**. Após subir o backend, abra no navegador:
